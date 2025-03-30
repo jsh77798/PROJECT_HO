@@ -51,11 +51,16 @@ void APortfolio_Character::BeginPlay()
 
 	Super::BeginPlay();
 
-	// PlayerData에서 공격력을 가져와 저장한다
+	// 게임 인스턴스에서 플레이어 데이터를 가져온다
 	UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
 	if (nullptr != Inst)
 	{
+		// PlayerData에서 공격력을 가져와 저장한다
 		CurPlayerData = Inst->GetPlayerData(PlayerDataName);
+		// 노티파이 세팅
+		Notify.Add("Effect_MuzzleFlash") = Inst->GetSubClass(TEXT("Effect_MuzzleFlash"));
+		Notify.Add("Effect_Shell") = Inst->GetSubClass(TEXT("Effect_Shell"));
+		Notify.Add("Attack") = Inst->GetSubClass(TEXT("PlayerRangeAttack"));
 	}
 	PlayerAtt = CurPlayerData->ATT;
 
@@ -464,36 +469,25 @@ void APortfolio_Character::AttackAction()
 	return;
 }
 
-//이펙트(공격)
+// 애니메이션 노티파이 이벤트
 void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
-	UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
-
-	TSubclassOf<UObject> Effect = Inst->GetSubClass(TEXT("ShotEffect"));
-	TSubclassOf<UObject> ShellEffect = Inst->GetSubClass(TEXT("ShellEffect"));
-	TSubclassOf<UObject> RangeAttack = Inst->GetSubClass(TEXT("PlayerRangeAttack"));
-
-	/*
-	if (nullptr != Effect)
+	
+    if (Notify[NotifyName])
 	{
-		AActor* Actor = GetWorld()->SpawnActor<AActor>(Effect);
-		Actor->SetActorLocation(GetActorLocation());
-		Actor->SetActorRotation(GetActorRotation());
-	}
-	*/
-	if (nullptr != Effect)
-	{
-		FTransform Trans;
+		//AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
+		//FTransform Trans;
 		FVector Pos;
-		TArray<UActorComponent*> MeshEffects = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponEffect"));
-		TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponMesh"));
+		TArray<UActorComponent*> MeshNotifyStart = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName);
+		//TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName);
 
-		USceneComponent* EffectCom = Cast<USceneComponent>(MeshEffects[0]);
+		USceneComponent* EffectCom = Cast<USceneComponent>(MeshNotifyStart[0]);
 		Pos = EffectCom->GetComponentToWorld().GetLocation();
 
 		// 발사체 만들기
+		if(Notify["PlayerRangeAttack"])
 		{
-			AActor* Actor = GetWorld()->SpawnActor<AActor>(RangeAttack);
+			AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify["PlayerRangeAttack"]);
 			Actor->Tags.Add(TEXT("Damage"));
 			APortfolio_Tile* ProjectTile = Cast<APortfolio_Tile>(Actor);
 			ProjectTile->SetActorLocation(Pos);
@@ -503,18 +497,7 @@ void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPoi
 			ProjectTile->PerformSweep(CameraLoc, CameraForward);
 		}
 	}
-	/*
-	if (nullptr != ShellEffect)
-	{
-		FTransform Trans;
-		FVector Pos;
-		TArray<UActorComponent*> MeshEffects = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("ShellEffect"));
-		TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponMesh"));
-
-		USceneComponent* EffectCom = Cast<USceneComponent>(MeshEffects[1]);
-		Pos = EffectCom->GetComponentToWorld().GetLocation();
-	}
-	*/
+	
 }
 
 //달리기

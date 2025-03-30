@@ -125,6 +125,7 @@ public:
 	*/
 
 private:
+	TMap<FName, TSubclassOf<UObject>> Notify;
 	//virtual void Tick(float DeltaTime) override;
 	void Tick(float _Delta) override;
 };
