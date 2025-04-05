@@ -32,10 +32,10 @@ public:
 	int Data = 0;
 
 	UPROPERTY(Category = "Effect", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float Speed = 3000.0f;
+		float Speed = 1000.0f;
 
 	UPROPERTY(Category = "Effect", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float DeathTime = 5.0f;
+		float DeathTime = 1.0f;
 
 	UPROPERTY(Category = "Effect", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AActor> DeathCreateObject = nullptr;

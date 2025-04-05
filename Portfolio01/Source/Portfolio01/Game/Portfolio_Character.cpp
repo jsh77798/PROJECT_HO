@@ -473,29 +473,26 @@ void APortfolio_Character::AttackAction()
 void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	
-    if (Notify[NotifyName])
+	if (Notify[NotifyName])
 	{
 		//AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
-		//FTransform Trans;
 		FVector Pos;
-		TArray<UActorComponent*> MeshNotifyStart = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName);
-		//TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName);
+		TArray<UActorComponent*> MeshNotifyStart = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName); //노티파이 네임과 같은 플레이어 캐릭터에 태그를 찾아서 가져온다.
+		USceneComponent* NotifyCom = Cast<USceneComponent>(MeshNotifyStart[0]);
+		Pos = NotifyCom->GetComponentToWorld().GetLocation();
 
-		USceneComponent* EffectCom = Cast<USceneComponent>(MeshNotifyStart[0]);
-		Pos = EffectCom->GetComponentToWorld().GetLocation();
-
-		// 발사체 만들기
-		if(Notify["PlayerRangeAttack"])
+		AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
+		Actor->Tags.Add(NotifyName);
+		APortfolio_Tile* ProjectTile = Cast<APortfolio_Tile>(Actor);
+		ProjectTile->SetActorLocation(Pos);
+		ProjectTile->SetActorRotation(GetActorRotation());
+		//ProjectTile->GetSphereComponent()->SetCollisionProfileName(TEXT("PlayerAttack"), true);
+		if (NotifyName == "Attack")
 		{
-			AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify["PlayerRangeAttack"]);
-			Actor->Tags.Add(TEXT("Damage"));
-			APortfolio_Tile* ProjectTile = Cast<APortfolio_Tile>(Actor);
-			ProjectTile->SetActorLocation(Pos);
-			ProjectTile->SetActorRotation(GetActorRotation());
-			ProjectTile->GetSphereComponent()->SetCollisionProfileName(TEXT("PlayerAttack"), true);
 			ProjectTile->AimingAttack(CameraLoc, CameraForward);
-			ProjectTile->PerformSweep(CameraLoc, CameraForward);
+			//ProjectTile->PerformSweep(CameraLoc, CameraForward);
 		}
+
 	}
 	
 }

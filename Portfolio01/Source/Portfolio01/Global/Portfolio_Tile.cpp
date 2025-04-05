@@ -19,10 +19,10 @@ APortfolio_Tile::APortfolio_Tile()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	SphereComponent->SetupAttachment(RootComponent);
-	SphereComponent->SetCollisionProfileName(TEXT("NoCollision"), true);
-	SphereComponent->ComponentTags.Add(FName("Damage"));
+	//SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	//SphereComponent->SetupAttachment(RootComponent);
+	//SphereComponent->SetCollisionProfileName(TEXT("NoCollision"), true);
+	//SphereComponent->ComponentTags.Add(FName("Damage"));
 	//SphereComponent->OnComponentHit.AddDynamic(this, &APortfolio_Tile::OnHit);
 
 
@@ -46,6 +46,9 @@ void APortfolio_Tile::BeginPlay()
 	//PlayerAtt = CurPlayerData->ATT;
 
 	GetLocation = GetActorLocation();
+
+	//AddActorWorldOffset(GetActorForwardVector()  /* * DeltaTime * Speed */);
+	//AddActorWorldOffset(GetActorLocation());
 
 	OnDestroyed.AddDynamic(this, &APortfolio_Tile::DestroyProjectile);
 	// SphereComponent->SetCollisionProfileName(TEXT("MonsterAttack"), true);
@@ -78,7 +81,7 @@ void APortfolio_Tile::Tick(float DeltaTime)
 		}
 
 		
-        AddActorWorldOffset(GetActorForwardVector()  * DeltaTime * Speed);
+        //AddActorWorldOffset(GetActorForwardVector()  /* * DeltaTime * Speed */);
 		
 		
 		//if (DeltaTime >= 0.01f)
@@ -398,7 +401,6 @@ void APortfolio_Tile::OtherDamage(FHitResult HitResult_Other)
 	}
 
 }
-
 
 void APortfolio_Tile::PerformSweep(FVector CameraLoc, FVector CameraForward)
 {
