@@ -66,7 +66,7 @@ UPortfolio_GameInstance::UPortfolio_GameInstance()
 	
 	// MonsterData 데이터테이블
 	{
-		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character_Monster/DT_MonsterData.DT_MonsterData'");
+		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character/Monster/DT_MonsterData.DT_MonsterData'");
 		ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataPath);
 
 		if (DataTable.Succeeded())
@@ -77,7 +77,7 @@ UPortfolio_GameInstance::UPortfolio_GameInstance()
 
 	// PlayerData 데이터테이블
 	{
-		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character_Player/DT_PlayerData.DT_PlayerData'");
+		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character/Player/DT_PlayerData.DT_PlayerData'");
 		ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataPath);
 
 		if (DataTable.Succeeded())

@@ -67,7 +67,7 @@ void APortfolio_Character::BeginPlay()
 	Damage(PlayerAtt);
 
 	GetGlobalAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &APortfolio_Character::MontageEnd);
-	GetGlobalAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &APortfolio_Character::AnimNotifyBegin);
+	GetGlobalAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &APortfolio_Character::NotifyBegin);
 	SetAniState(EAniState::Idle);
 }
 
@@ -470,30 +470,25 @@ void APortfolio_Character::AttackAction()
 }
 
 // 애니메이션 노티파이 이벤트
-void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+void APortfolio_Character::NotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
-	
 	if (Notify[NotifyName])
 	{
-		//AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
-		FVector Pos;
-		FRotator Rotation;
-		TArray<UActorComponent*> MeshNotifyStart = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName); //노티파이 네임과 같은 플레이어 캐릭터에 태그를 찾아서 가져온다.
-		USceneComponent* NotifyCom = Cast<USceneComponent>(MeshNotifyStart[0]);
-		Pos = NotifyCom->GetComponentToWorld().GetLocation();
-		Rotation = NotifyCom->GetSocketRotation(TEXT("slide_1")); // 소캣의 회전값을 가져온다. // 공용으로 사용할 수 있도록 수정 필요
+		FVector pos;
+		FRotator rotation;
+		TArray<UActorComponent*> notifyMesh = GetComponentsByTag(USceneComponent::StaticClass(), NotifyName); //노티파이 네임과 같은 플레이어 캐릭터에 태그를 찾아서 가져온다.
+		USceneComponent* notifyComponent = Cast<USceneComponent>(notifyMesh[0]);
+		pos = notifyComponent->GetComponentToWorld().GetLocation();
+		rotation = notifyComponent->GetSocketRotation(GetAttachParentSocketName()); // 소캣의 회전값을 가져온다. 
 
-		AActor* Actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
-		Actor->Tags.Add(NotifyName);
-		APortfolio_Tile* ProjectTile = Cast<APortfolio_Tile>(Actor);
-		ProjectTile->SetActorLocation(Pos);
-		ProjectTile->SetActorRotation(Rotation);
-		//ProjectTile->SetActorRotation(GetActorRotation());
-		//ProjectTile->GetSphereComponent()->SetCollisionProfileName(TEXT("PlayerAttack"), true);
+		AActor* actor = GetWorld()->SpawnActor<AActor>(Notify[NotifyName]);
+		actor->Tags.Add(NotifyName);
+		APortfolio_Tile* projectile = Cast<APortfolio_Tile>(actor);
+		projectile->SetActorLocation(pos);
+		projectile->SetActorRotation(rotation);
 		if (NotifyName == "Attack")
 		{
-			ProjectTile->AimingAttack(CameraLoc, CameraForward);
-			//ProjectTile->PerformSweep(CameraLoc, CameraForward);
+			projectile->AimingAttack(CameraLoc, CameraForward);
 		}
 
 	}

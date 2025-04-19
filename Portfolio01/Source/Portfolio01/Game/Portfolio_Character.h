@@ -114,7 +114,7 @@ public:
 		void MontageEnd(UAnimMontage* Anim, bool _Inter);
 
 	UFUNCTION()
-		void AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
+		void NotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
 
 	float Speed = 1500.0f;
 
