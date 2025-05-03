@@ -67,7 +67,7 @@ void APortfolio_Character::BeginPlay()
 	Damage(PlayerAtt);
 
 	GetGlobalAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &APortfolio_Character::MontageEnd);
-	GetGlobalAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &APortfolio_Character::NotifyBegin);
+	GetGlobalAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &APortfolio_Character::AnimNotifyBegin);
 	SetAniState(EAniState::Idle);
 }
 
@@ -470,7 +470,7 @@ void APortfolio_Character::AttackAction()
 }
 
 // 애니메이션 노티파이 이벤트
-void APortfolio_Character::NotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	if (Notify[NotifyName])
 	{
