@@ -3,9 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Delegates/Delegate.h"
-#include "GameFramework/Actor.h"
-#include "HAL/Platform.h"
+#include "Components/ActorComponent.h"
 #include "UObject/UObjectGlobals.h"
 #include "HealthComponent.generated.h"
 
@@ -17,12 +15,22 @@ enum class ELyraDeathState : uint8
 	DeathFinished
 };
 
-UCLASS()
-class PORTFOLIO01_API AHealthComponent : public AActor
+UCLASS(Blueprintable, Meta = (BlueprintSpawnableComponent))
+class PORTFOLIO01_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:
-	AHealthComponent();
-	
+public:	
+	// Sets default values for this component's properties
+	UHealthComponent();
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+		
 };

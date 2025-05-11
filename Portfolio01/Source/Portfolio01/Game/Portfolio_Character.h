@@ -12,6 +12,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Portfolio_Character.generated.h"
 
+class UHealthComponent;
+
 UCLASS()
 class PORTFOLIO01_API APortfolio_Character : public APortfolio_GlobalCharacter
 {
@@ -128,5 +130,9 @@ private:
 	TMap<FName, TSubclassOf<UObject>> Notify;
 	//virtual void Tick(float DeltaTime) override;
 	void Tick(float _Delta) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UHealthComponent> HealthComponent;
+	
 };
 
