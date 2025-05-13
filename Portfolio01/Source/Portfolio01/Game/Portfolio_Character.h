@@ -30,15 +30,10 @@ public:
 	struct FPlayerData* CurPlayerData;
 	int PlayerAtt = 0;
 
-	// 블루프린트에서 호출하게 하려면 기본적으로 public이어야 합니다.
-	UFUNCTION(BlueprintCallable)
-	void AnimationTick();
-
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	// Called every frame
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -103,6 +98,7 @@ public:
 	//타깃 오프셋: 0.0 / 0.0 / 0.0
 	
 	//UCameraComponent* OurCamera;
+	
     //카메라
 	UPROPERTY(EditAnyWhere, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* camera;
@@ -120,14 +116,9 @@ public:
 
 	float Speed = 1500.0f;
 
-	//공격시 라인 트레이싱 함수 실행
-	/*
-	UFUNCTION()
-	    void AimingAttack();
-	*/
-
 private:
 	TMap<FName, TSubclassOf<UObject>> Notify;
+
 	//virtual void Tick(float DeltaTime) override;
 	void Tick(float _Delta) override;
 

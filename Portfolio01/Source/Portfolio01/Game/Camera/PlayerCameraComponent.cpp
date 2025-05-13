@@ -1,10 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Global/HealthSet.h"
-
-UHealthSet::UHealthSet()
-{
-
-}
+#include "Game/Camera/PlayerCameraComponent.h"
 

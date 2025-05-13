@@ -3,13 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/UnrealType.h"
 
-/**
- * 
- */
-class PORTFOLIO01_API HealthSet
+#include "HealthSet.generated.h"
+
+UCLASS(BlueprintType)
+class PORTFOLIO01_API UHealthSet : public UObject
 {
+	GENERATED_BODY()
+
 public:
-	HealthSet();
-	~HealthSet();
+	UHealthSet();
+	
 };

@@ -554,10 +554,6 @@ void APortfolio_Character::Crouch()
 	}
 }
 
-void APortfolio_Character::AnimationTick()
-{
-
-}
 
 /*
 void APortfolio_Character::AimingAttack() 
