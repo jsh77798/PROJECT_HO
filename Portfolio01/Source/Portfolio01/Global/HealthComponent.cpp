@@ -14,7 +14,7 @@ UHealthComponent::UHealthComponent(const FObjectInitializer& ObjectInitializer)
 
 	SetIsReplicatedByDefault(true);
 
-	//AbilitySystemComponent = nullptr;
+	AbilitySystemComponent = nullptr;
 	HealthSet = nullptr;
 	DeathState = EDeathState::NotDead;
 }
@@ -60,7 +60,7 @@ void UHealthComponent::OnRep_DeathState(EDeathState OldDeathState)
 	if (OldDeathState > NewDeathState)
 	{
 		// The server is trying to set us back but we've already predicted past the server state.
-		UE_LOG(LogPF, Warning, TEXT("HealthComponent: Predicted past server death state [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
+		UE_LOG(LogPP, Warning, TEXT("HealthComponent: Predicted past server death state [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
 		return;
 	}
 
@@ -77,7 +77,7 @@ void UHealthComponent::OnRep_DeathState(EDeathState OldDeathState)
 		}
 		else
 		{
-			UE_LOG(LogPF, Error, TEXT("HealthComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
+			UE_LOG(LogPP, Error, TEXT("HealthComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
 		}
 	}
 	else if (OldDeathState == EDeathState::DeathStarted)
@@ -88,7 +88,7 @@ void UHealthComponent::OnRep_DeathState(EDeathState OldDeathState)
 		}
 		else
 		{
-			UE_LOG(LogPF, Error, TEXT("HealthComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
+			UE_LOG(LogPP, Error, TEXT("HealthComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
 		}
 	}
 

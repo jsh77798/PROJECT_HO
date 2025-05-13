@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "UObject/UObjectGlobals.h"
+
 #include "HealthComponent.generated.h"
 
+class UPPAbilitySystemComponent;
 class UHealthSet;
 
 UENUM(BlueprintType)
@@ -16,7 +18,7 @@ enum class EDeathState : uint8
 	DeathStarted,
 	DeathFinished
 };
-//replicated
+
 UCLASS(Blueprintable, Meta = (BlueprintSpawnableComponent))
 class PORTFOLIO01_API UHealthComponent : public UActorComponent
 {
@@ -88,8 +90,8 @@ protected:
 protected:
 
 	// Ability system used by this component.
-	//UPROPERTY()
-	//TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY()
+	TObjectPtr<UPPAbilitySystemComponent> AbilitySystemComponent;
 
 	// Health set used by this component.
 	UPROPERTY()

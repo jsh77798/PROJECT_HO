@@ -11,7 +11,7 @@ public class Portfolio01 : ModuleRules
         PublicIncludePaths.Add(ModuleDirectory);
         PrivateIncludePaths.Add(ModuleDirectory);
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "NavigationSystem","AIModule" ,"GameplayTasks"});
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "NavigationSystem","AIModule", "GameplayAbilities", "GameplayTags", "GameplayTasks"});
 
 
         PrivateDependencyModuleNames.AddRange(new string[] {  });

@@ -3,10 +3,10 @@
 #include "LogChannels.h"
 #include "GameFramework/Actor.h"
 
-DEFINE_LOG_CATEGORY(LogPF);
-DEFINE_LOG_CATEGORY(LogPFExperience);
-DEFINE_LOG_CATEGORY(LogPFAbilitySystem);
-DEFINE_LOG_CATEGORY(LogPFTeams);
+DEFINE_LOG_CATEGORY(LogPP);
+DEFINE_LOG_CATEGORY(LogPPExperience);
+DEFINE_LOG_CATEGORY(LogPPAbilitySystem);
+DEFINE_LOG_CATEGORY(LogPPTeams);
 
 FString GetClientServerContextString(UObject* ContextObject)
 {
