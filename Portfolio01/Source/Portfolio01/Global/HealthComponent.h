@@ -2,8 +2,10 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/GameFrameworkComponent.h"
+#include "Delegates/Delegate.h"
+#include "GameFramework/Actor.h"
+#include "HAL/Platform.h"
 #include "UObject/UObjectGlobals.h"
 
 #include "HealthComponent.generated.h"
@@ -20,7 +22,7 @@ enum class EDeathState : uint8
 };
 
 UCLASS(Blueprintable, Meta = (BlueprintSpawnableComponent))
-class PORTFOLIO01_API UHealthComponent : public UActorComponent
+class PORTFOLIO01_API UHealthComponent : public UGameFrameworkComponent
 {
 	GENERATED_BODY()
 

@@ -14,5 +14,5 @@ UCLASS()
 class PORTFOLIO01_API UPPAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
-	
+
 };
