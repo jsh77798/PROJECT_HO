@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "Portfolio_Character_Controller.generated.h"
+
+#include "PPPlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PORTFOLIO01_API APortfolio_Character_Controller : public APlayerController
+class PORTFOLIO01_API APPPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
