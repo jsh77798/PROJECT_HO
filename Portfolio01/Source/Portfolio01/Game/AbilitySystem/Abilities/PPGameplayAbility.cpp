@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AbilitySystem/Abilities/PPGameplayAbility.h"
+#include "PPGameplayAbility.h"
 
 #include "LogChannels.h"
-#include "AbilitySystem/PPAbilitySystemComponent.h"
+#include "Game/AbilitySystem/PPAbilitySystemComponent.h"
 #include "AbilitySystemLog.h"
 #include "HAL/PlatformStackWalk.h"
-#include "Game/PPPlayerController.h"
+#include "Game/Character/PPPlayerController.h"
 //#include "Game/LyraCharacter.h"
 //#include "LyraGameplayTags.h"
 //#include "LyraAbilityCost.h"

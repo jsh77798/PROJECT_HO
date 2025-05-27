@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Weapons/WeaponFire.h"
+#include "WeaponFire.h"
 
 // Sets default values
 AWeaponFire::AWeaponFire()
