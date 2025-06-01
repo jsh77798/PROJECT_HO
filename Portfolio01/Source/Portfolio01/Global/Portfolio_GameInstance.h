@@ -28,6 +28,8 @@ public:
 
 	TSubclassOf<UObject> GetSubClass(FName _Name);
 
+	struct FDefaultCharacterData* GetCharacterData(FName _Name);
+
 	struct FMonsterData* GetMonsterData(FName _Name);
 
 	struct FPlayerData* GetPlayerData(FName _Name);
@@ -54,6 +56,10 @@ private:
 	UDataTable* ItemDatas;
 
 	TArray<const struct FItemData*> ItemDataRandoms;
+
+	// CharacterData 테이블
+	UPROPERTY()
+	UDataTable* CharacterData;
 
 	// MonsterData 테이블
 	UPROPERTY()

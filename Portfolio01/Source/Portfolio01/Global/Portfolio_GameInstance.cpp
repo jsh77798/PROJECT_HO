@@ -5,6 +5,7 @@
 #include <Global/Data/GameMeshData.h>
 #include <Global/Data/ItemData.h>
 #include <Global/Data/SubClassData.h>
+#include <Game/Character/Data/DefaultCharacterData.h>
 #include <Global/Data/MonsterData.h>
 #include <Global/Data/PlayerData.h>
 #include <Global/Data/TileData.h>
@@ -64,6 +65,17 @@ UPortfolio_GameInstance::UPortfolio_GameInstance()
 		}
 	}
 	
+	// CharacterData 데이터테이블 주소
+	{
+		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character/DT_Character.DT_Character'");
+		ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataPath);
+
+		if (DataTable.Succeeded())
+		{
+			CharacterData = DataTable.Object;
+		}
+	}
+
 	// MonsterData 데이터테이블
 	{
 		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character/Monster/DT_MonsterData.DT_MonsterData'");
@@ -149,6 +161,24 @@ TSubclassOf<UObject> UPortfolio_GameInstance::GetSubClass(FName _Name)
 	}
 
 	return FindTable->Object;
+}
+
+// Get CharacterData 
+FDefaultCharacterData* UPortfolio_GameInstance::GetCharacterData(FName _Name)
+{
+	if (nullptr == CharacterData)
+	{
+		return nullptr;
+	}
+
+	FDefaultCharacterData* FindTable = CharacterData->FindRow<FDefaultCharacterData>(_Name, _Name.ToString());
+
+	if (nullptr == FindTable)
+	{
+		return nullptr;
+	}
+
+	return FindTable;
 }
 
 // MonsterData 값 가져오기

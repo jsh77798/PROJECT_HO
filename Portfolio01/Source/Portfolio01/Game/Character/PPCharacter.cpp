@@ -4,26 +4,29 @@
 #include "PPCharacter.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Global/Portfolio_GameInstance.h"
 #include "HealthComponent.h"
 
 APPCharacter::APPCharacter()
 {
-	//UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+}
 
-	//if (Inst)
-	//{
-	//	CharacterData = Inst->GetMonsterData(CharacterName);
-	//}
+void APPCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
+	if (Inst != nullptr)
+	{
+		CharacterData = Inst->GetCharacterData(CharacterName);
+	}
 
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
 
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-
-
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
-
 }
 
 APPPlayerController* APPCharacter::GetPPPlayerController() const
