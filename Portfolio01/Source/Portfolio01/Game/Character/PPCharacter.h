@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
+#include "Data/DefaultCharacterData.h"
+#include "Data/AbilityData.h"
 #include "Modular/ModularCharacter.h"
 
 #include "PPCharacter.generated.h"
@@ -49,7 +52,12 @@ class PORTFOLIO01_API APPCharacter : public AModularCharacter
 	FName CharacterName = "NONE";
 
 	/** CharacterData */
-	//const struct FCharacterData* CharacterData;
+	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FDefaultCharacterData CharacterData;
+
+	/** AbilityData */
+	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FAbilityData AbilityData;
 
 	/** MappingContext */
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
