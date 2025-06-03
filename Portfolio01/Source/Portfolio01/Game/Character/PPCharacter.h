@@ -52,12 +52,18 @@ class PORTFOLIO01_API APPCharacter : public AModularCharacter
 	FName CharacterName = "NONE";
 
 	/** CharacterData */
-	//UPROPERTY(Category = "Data", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	struct FDefaultCharacterData* CharacterData;
 
 	/** AbilityData */
-	//UPROPERTY(Category = "Data", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	struct FAbilityData* AbilityData;
+
+	/** CharacterData */
+	//UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//UDataTable* CharacterData;
+
+	/** AbilityData */
+	//UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//UDataTable* AbilityData;
 
 	/** MappingContext */
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))

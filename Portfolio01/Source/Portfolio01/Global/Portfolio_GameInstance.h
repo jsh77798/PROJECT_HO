@@ -58,7 +58,7 @@ private:
 	TArray<const struct FItemData*> ItemDataRandoms;
 
 	// CharacterData 테이블
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Game")
 	UDataTable* CharacterData;
 
 	// MonsterData 테이블
