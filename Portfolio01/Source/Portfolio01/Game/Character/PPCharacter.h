@@ -86,8 +86,15 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Reset() override;
 
+	// Use Ability
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	void UseAbility(FName AbilityName);
+
+protected:
+	
+
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UHealthComponent> HealthComponent;
 
 protected:

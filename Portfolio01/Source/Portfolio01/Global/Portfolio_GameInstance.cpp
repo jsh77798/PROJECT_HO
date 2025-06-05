@@ -6,6 +6,7 @@
 #include <Global/Data/ItemData.h>
 #include <Global/Data/SubClassData.h>
 #include <Game/Character/Data/DefaultCharacterData.h>
+#include <Game/Character/Data/AbilityData.h>
 #include <Global/Data/MonsterData.h>
 #include <Global/Data/PlayerData.h>
 #include <Global/Data/TileData.h>
@@ -73,6 +74,17 @@ UPortfolio_GameInstance::UPortfolio_GameInstance()
 		if (DataTable.Succeeded())
 		{
 			CharacterData = DataTable.Object;
+		}
+	}
+
+	// AbilityData 데이터테이블 주소
+	{
+		FString DataPath = TEXT("/Script/Engine.DataTable'/Game/BluePrint/Character/DT_Ability.DT_Ability'");
+		ConstructorHelpers::FObjectFinder<UDataTable> DataTable(*DataPath);
+
+		if (DataTable.Succeeded())
+		{
+			AbilityData = DataTable.Object;
 		}
 	}
 
@@ -172,6 +184,24 @@ FDefaultCharacterData* UPortfolio_GameInstance::GetCharacterData(FName _Name)
 	}
 
 	FDefaultCharacterData* FindTable = CharacterData->FindRow<FDefaultCharacterData>(_Name, _Name.ToString());
+
+	if (nullptr == FindTable)
+	{
+		return nullptr;
+	}
+
+	return FindTable;
+}
+
+// Get AbilityData
+FAbilityData* UPortfolio_GameInstance::GetAbilityData(FName _Name)
+{
+	if (nullptr == AbilityData)
+	{
+		return nullptr;
+	}
+
+	FAbilityData* FindTable = AbilityData->FindRow<FAbilityData>(_Name, _Name.ToString());
 
 	if (nullptr == FindTable)
 	{

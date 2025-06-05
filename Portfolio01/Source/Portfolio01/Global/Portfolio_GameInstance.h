@@ -30,6 +30,8 @@ public:
 
 	struct FDefaultCharacterData* GetCharacterData(FName _Name);
 
+	struct FAbilityData* GetAbilityData(FName _Name);
+
 	struct FMonsterData* GetMonsterData(FName _Name);
 
 	struct FPlayerData* GetPlayerData(FName _Name);
@@ -60,6 +62,10 @@ private:
 	// CharacterData 테이블
 	UPROPERTY(EditDefaultsOnly, Category = "Game")
 	UDataTable* CharacterData;
+
+	// AbilityData 테이블
+	UPROPERTY(EditDefaultsOnly, Category = "Game")
+	UDataTable* AbilityData;
 
 	// MonsterData 테이블
 	UPROPERTY()
