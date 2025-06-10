@@ -21,7 +21,7 @@ struct PORTFOLIO01_API FDefaultCharacterData : public FTableRowBase
 
 	/** Status */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status") 
-	    int Health = 0;
+	    int32 Health = 0;
 
 	/** Movement */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") 
