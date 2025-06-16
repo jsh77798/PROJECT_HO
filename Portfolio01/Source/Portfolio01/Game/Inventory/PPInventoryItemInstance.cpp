@@ -17,17 +17,15 @@ UPPInventoryItemInstance::UPPInventoryItemInstance(const FObjectInitializer& Obj
 
 void UPPInventoryItemInstance::SetItemDef(TSubclassOf<UPPInventoryItemDefinition> InDef)
 {
-//	ItemDef = InDef;
+	ItemDef = InDef;
 }
 
 const UPPInventoryItemFragment* UPPInventoryItemInstance::FindFragmentByClass(TSubclassOf<UPPInventoryItemFragment> FragmentClass) const
 {
-//	if ((ItemDef != nullptr) && (FragmentClass != nullptr))
-//	{
-//		return GetDefault<UPPInventoryItemDefinition>(ItemDef)->FindFragmentByClass(FragmentClass);
-//	}
+	if ((ItemDef != nullptr) && (FragmentClass != nullptr))
+	{
+		return GetDefault<UPPInventoryItemDefinition>(ItemDef)->FindFragmentByClass(FragmentClass);
+	}
 	return nullptr;
 }
-/*
-*/
 

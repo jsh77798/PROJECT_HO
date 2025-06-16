@@ -25,10 +25,10 @@ class UPPInventoryItemInstance : public UObject
 public:
 	UPPInventoryItemInstance(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	//TSubclassOf<UPPInventoryItemDefinition> GetItemDef() const
-	//{
-	//	return ItemDef;
-	//}
+	TSubclassOf<UPPInventoryItemDefinition> GetItemDef() const
+	{
+		return ItemDef;
+	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure=false, meta=(DeterminesOutputType=FragmentClass))
 	const UPPInventoryItemFragment* FindFragmentByClass(TSubclassOf<UPPInventoryItemFragment> FragmentClass) const;
@@ -42,12 +42,12 @@ public:
 private:
 	void SetItemDef(TSubclassOf<UPPInventoryItemDefinition> InDef);
 
-	//friend struct FPPInventoryList;
+	friend struct FPPInventoryList;
 
-	/*
+	
 private:
 	// The item definition
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	TSubclassOf<UPPInventoryItemDefinition> ItemDef;
-	*/
+	
 };
