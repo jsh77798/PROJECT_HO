@@ -1,0 +1,14 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-GameplayMessageRuntime-Win64-DebugGame.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Intermediate\Build\Win64\Portfolio01Editor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.ShadowErrors.InclOrderUnreal5_0.h.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\DebugGame\GameplayMessageRuntime\Module.GameplayMessageRuntime.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\DebugGame\GameplayMessageRuntime\GameplayMessageRuntime.init.gen.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\DebugGame\GameplayMessageRuntime\GameplayMessageTypes2.gen.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\DebugGame\GameplayMessageRuntime\Default.rc2.res"
+/OUT:"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\DebugGame\GameplayMessageRuntime\UnrealEditor-GameplayMessageRuntime-Win64-DebugGame.lib"
