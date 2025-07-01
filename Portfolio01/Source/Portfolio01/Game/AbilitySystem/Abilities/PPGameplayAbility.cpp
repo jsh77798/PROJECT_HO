@@ -21,7 +21,7 @@
 //#include "Physics/PhysicalMaterialWithTags.h"
 #include "GameFramework/PlayerState.h"
 #include "HAL/PlatformStackWalk.h"
-#include "Game/Camera/CameraMode.h"
+#include "Game/Camera/PPCameraMode.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPGameplayAbility)
 
