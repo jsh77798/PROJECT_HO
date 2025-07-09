@@ -8,17 +8,17 @@
 #include "AbilitySystemLog.h"
 #include "HAL/PlatformStackWalk.h"
 #include "Game/Character/PPPlayerController.h"
-//#include "Game/LyraCharacter.h"
-//#include "LyraGameplayTags.h"
-//#include "LyraAbilityCost.h"
+#include "Game/Character/PPCharacter.h"
+#include "Game/PPGameplayTags.h"
+#include "PPAbilityCost.h"
 //#include "Character/LyraHeroComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemGlobals.h"
 //#include "LyraAbilitySimpleFailureMessage.h"
 //#include "GameFramework/GameplayMessageSubsystem.h"
-//#include "AbilitySystem/LyraAbilitySourceInterface.h"
-//#include "AbilitySystem/LyraGameplayEffectContext.h"
-//#include "Physics/PhysicalMaterialWithTags.h"
+#include "Game/AbilitySystem/PPAbilitySourceInterface.h"
+#include "Game/AbilitySystem/PPGameplayEffectContext.h"
+#include "Game/Physics/PPPhysicalMaterialWithTags.h"
 #include "GameFramework/PlayerState.h"
 #include "HAL/PlatformStackWalk.h"
 #include "Game/Camera/PPCameraMode.h"
@@ -45,8 +45,8 @@ UPPGameplayAbility::UPPGameplayAbility(const FObjectInitializer& ObjectInitializ
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 	NetSecurityPolicy = EGameplayAbilityNetSecurityPolicy::ClientOrServer;
 
-	ActivationPolicy = ELyraAbilityActivationPolicy::OnInputTriggered;
-	ActivationGroup = ELyraAbilityActivationGroup::Independent;
+	ActivationPolicy = EPPAbilityActivationPolicy::OnInputTriggered;
+	ActivationGroup = EPPAbilityActivationGroup::Independent;
 
 	bLogCancelation = false;
 
@@ -93,10 +93,10 @@ AController* UPPGameplayAbility::GetControllerFromActorInfo() const
 	return nullptr;
 }
 
-//APPCharacter* ULyraGameplayAbility::GetLyraCharacterFromActorInfo() const
-//{
-//	return (CurrentActorInfo ? Cast<ALyraCharacter>(CurrentActorInfo->AvatarActor.Get()) : nullptr);
-//}
+APPCharacter* UPPGameplayAbility::GetPPCharacterFromActorInfo() const
+{
+	return (CurrentActorInfo ? Cast<APPCharacter>(CurrentActorInfo->AvatarActor.Get()) : nullptr);
+}
 
 //ULyraHeroComponent* ULyraGameplayAbility::GetHeroComponentFromActorInfo() const
 //{
@@ -138,7 +138,7 @@ void UPPGameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagConta
 }
 */
 
-/*
+
 bool UPPGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!ActorInfo || !ActorInfo->AbilitySystemComponent.IsValid())
@@ -146,8 +146,8 @@ bool UPPGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 		return false;
 	}
 
-	UPPAbilitySystemComponent* LyraASC = CastChecked<UPPAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get());
-	const FLyraGameplayTags& GameplayTags = FLyraGameplayTags::Get();
+	UPPAbilitySystemComponent* PPASC = CastChecked<UPPAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get());
+	const FPPGameplayTags& GameplayTags = FPPGameplayTags::Get();
 
 	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
 	{
@@ -155,7 +155,7 @@ bool UPPGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 	}
 
 	//@TODO Possibly remove after setting up tag relationships
-	if (LyraASC->IsActivationGroupBlocked(ActivationGroup))
+	if (PPASC->IsActivationGroupBlocked(ActivationGroup))
 	{
 		if (OptionalRelevantTags)
 		{
@@ -166,12 +166,12 @@ bool UPPGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 
 	return true;
 }
-*/
+
 
 void UPPGameplayAbility::SetCanBeCanceled(bool bCanBeCanceled)
 {
 	// The ability can not block canceling if it's replaceable.
-	if (!bCanBeCanceled && (ActivationGroup == ELyraAbilityActivationGroup::Exclusive_Replaceable))
+	if (!bCanBeCanceled && (ActivationGroup == EPPAbilityActivationGroup::Exclusive_Replaceable))
 	{
 		UE_LOG(LogPPAbilitySystem, Error, TEXT("SetCanBeCanceled: Ability [%s] can not block canceling because its activation group is replaceable."), *GetName());
 		return;
@@ -234,29 +234,29 @@ void UPPGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-//bool UPPGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const
-//{
-//	if (!Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags) || !ActorInfo)
-//	{
-//		return false;
-//	}
-//
-//	// Verify we can afford any additional costs
-//	for (TObjectPtr<ULyraAbilityCost> AdditionalCost : AdditionalCosts)
-//	{
-//		if (AdditionalCost != nullptr)
-//		{
-//			if (!AdditionalCost->CheckCost(this, Handle, ActorInfo, /*inout*/ OptionalRelevantTags))
-//			{
-//				return false;
-//			}
-//		}
-//	}
-//
-//	return true;
-//}
+bool UPPGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags) || !ActorInfo)
+	{
+		return false;
+	}
 
-/*
+	// Verify we can afford any additional costs
+	for (TObjectPtr<UPPAbilityCost> AdditionalCost : AdditionalCosts)
+	{
+		if (AdditionalCost != nullptr)
+		{
+			if (!AdditionalCost->CheckCost(this, Handle, ActorInfo, /*inout*/ OptionalRelevantTags))
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+
 void UPPGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
 {
 	Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
@@ -288,7 +288,7 @@ void UPPGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, cons
 	// Pay any additional costs
 	bool bAbilityHitTarget = false;
 	bool bHasDeterminedIfAbilityHitTarget = false;
-	for (TObjectPtr<ULyraAbilityCost> AdditionalCost : AdditionalCosts)
+	for (TObjectPtr<UPPAbilityCost> AdditionalCost : AdditionalCosts)
 	{
 		if (AdditionalCost != nullptr)
 		{
@@ -310,7 +310,7 @@ void UPPGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, cons
 		}
 	}
 }
-*/
+
 
 /*
 bool UPPGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySystemComponent& AbilitySystemComponent, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
@@ -432,7 +432,7 @@ void UPPGameplayAbility::TryActivateAbilityOnSpawn(const FGameplayAbilityActorIn
 	const bool bIsPredicting = (Spec.ActivationInfo.ActivationMode == EGameplayAbilityActivationMode::Predicting);
 
 	// Try to activate if activation policy is on spawn.
-	if (ActorInfo && !Spec.IsActive() && !bIsPredicting && (ActivationPolicy == ELyraAbilityActivationPolicy::OnSpawn))
+	if (ActorInfo && !Spec.IsActive() && !bIsPredicting && (ActivationPolicy == EPPAbilityActivationPolicy::OnSpawn))
 	{
 		UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
 		const AActor* AvatarActor = ActorInfo->AvatarActor.Get();

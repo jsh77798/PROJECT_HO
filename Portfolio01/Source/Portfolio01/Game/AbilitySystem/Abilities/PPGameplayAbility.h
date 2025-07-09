@@ -15,9 +15,9 @@ class APortfolio_GlobalCharacter;
 class APPPlayerController;
 class APlayerController;
 class FText;
-//class ILyraAbilitySourceInterface;
+class IPPAbilitySourceInterface;
 class UAnimMontage;
-//class ULyraAbilityCost;
+class UPPAbilityCost;
 class UPPAbilitySystemComponent;
 class UCameraMode;
 //class ULyraHeroComponent;
@@ -28,12 +28,12 @@ struct FGameplayEffectSpec;
 struct FGameplayEventData;
 
 /**
- * ELyraAbilityActivationPolicy
+ * EPPAbilityActivationPolicy
  *
  *	Defines how an ability is meant to activate.
  */
 UENUM(BlueprintType)
-enum class ELyraAbilityActivationPolicy : uint8
+enum class EPPAbilityActivationPolicy : uint8
 {
 	// Try to activate the ability when the input is triggered.
 	OnInputTriggered,
@@ -47,12 +47,12 @@ enum class ELyraAbilityActivationPolicy : uint8
 
 
 /**
- * ELyraAbilityActivationGroup
+ * EPPAbilityActivationGroup
  *
  *	Defines how an ability activates in relation to other abilities.
  */
 UENUM(BlueprintType)
-enum class ELyraAbilityActivationGroup : uint8
+enum class EPPAbilityActivationGroup : uint8
 {
 	// Ability runs independently of all other abilities.
 	Independent,
@@ -68,7 +68,7 @@ enum class ELyraAbilityActivationGroup : uint8
 
 /** Failure reason that can be used to play an animation montage when a failure occurs */
 USTRUCT(BlueprintType)
-struct FLyraAbilityMontageFailureMessage
+struct FPPAbilityMontageFailureMessage
 {
 	GENERATED_BODY()
 
@@ -104,24 +104,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ability")
 	AController* GetControllerFromActorInfo() const;
 
-	//UFUNCTION(BlueprintCallable, Category = "Ability")
-	//APortfolio_GlobalCharacter* GetPortfolio_GlobalCharacterFromActorInfo() const;
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	APPCharacter* GetPPCharacterFromActorInfo() const;
 
 	//UFUNCTION(BlueprintCallable, Category = "Ability")
 	//ULyraHeroComponent* GetHeroComponentFromActorInfo() const;
 
-	ELyraAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
-	ELyraAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }
+	EPPAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
+	EPPAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }
 
 	void TryActivateAbilityOnSpawn(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) const;
 
 	// Returns true if the requested activation group is a valid transition.
 	//UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
-	//bool CanChangeActivationGroup(ELyraAbilityActivationGroup NewGroup) const;
+	//bool CanChangeActivationGroup(EPPAbilityActivationGroup NewGroup) const;
 
 	// Tries to change the activation group.  Returns true if it successfully changed.
 	//UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
-	//bool ChangeActivationGroup(ELyraAbilityActivationGroup NewGroup);
+	//bool ChangeActivationGroup(EPPAbilityActivationGroup NewGroup);
 
 	// Sets the ability's camera mode.
 	//UFUNCTION(BlueprintCallable, Category = "Ability")
@@ -131,11 +131,11 @@ public:
 	//UFUNCTION(BlueprintCallable, Category = "Ability")
 	//void ClearCameraMode();
 
-	//void OnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
-	//{
-	//	NativeOnAbilityFailedToActivate(FailedReason);
-	//	ScriptOnAbilityFailedToActivate(FailedReason);
-	//}
+	void OnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
+	{
+		//NativeOnAbilityFailedToActivate(FailedReason);
+		ScriptOnAbilityFailedToActivate(FailedReason);
+	}
 
 protected:
 
@@ -143,18 +143,18 @@ protected:
 	//virtual void NativeOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const;
 
 	// Called when the ability fails to activate
-	//UFUNCTION(BlueprintImplementableEvent)
-	//void ScriptOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const;
+	UFUNCTION(BlueprintImplementableEvent)
+	void ScriptOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const;
 
 	//~UGameplayAbility interface
-	//virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const override;
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const override;
 	virtual void SetCanBeCanceled(bool bCanBeCanceled) override;
 	//virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	//virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
-	//virtual void ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
+	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+	virtual void ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
 	//virtual FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
 	//virtual void ApplyAbilityTagsToGameplayEffectSpec(FGameplayEffectSpec& Spec, FGameplayAbilitySpec* AbilitySpec) const override;
 	//virtual bool DoesAbilitySatisfyTagRequirements(const UAbilitySystemComponent& AbilitySystemComponent, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const override;
@@ -162,7 +162,7 @@ protected:
 
 	//virtual void OnPawnAvatarSet();
 
-	//virtual void GetAbilitySource(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, float& OutSourceLevel, const ILyraAbilitySourceInterface*& OutAbilitySource, AActor*& OutEffectCauser) const;
+	//virtual void GetAbilitySource(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, float& OutSourceLevel, const IPPAbilitySourceInterface*& OutAbilitySource, AActor*& OutEffectCauser) const;
 
 	/** Called when this ability is granted to the ability system component. */
 	//UFUNCTION(BlueprintImplementableEvent, Category = Ability, DisplayName = "OnAbilityAdded")
@@ -180,15 +180,15 @@ protected:
 
 	// Defines how this ability is meant to activate.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Activation")
-	ELyraAbilityActivationPolicy ActivationPolicy;
+	EPPAbilityActivationPolicy ActivationPolicy;
 
 	// Defines the relationship between this ability activating and other abilities activating.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Activation")
-	ELyraAbilityActivationGroup ActivationGroup;
+	EPPAbilityActivationGroup ActivationGroup;
 
 	// Additional costs that must be paid to activate this ability
-	//UPROPERTY(EditDefaultsOnly, Instanced, Category = Costs)
-	//TArray<TObjectPtr<ULyraAbilityCost>> AdditionalCosts;
+	UPROPERTY(EditDefaultsOnly, Instanced, Category = Costs)
+	TArray<TObjectPtr<UPPAbilityCost>> AdditionalCosts;
 
 	// Map of failure tags to simple error messages
 	UPROPERTY(EditDefaultsOnly, Category = "Advanced")
