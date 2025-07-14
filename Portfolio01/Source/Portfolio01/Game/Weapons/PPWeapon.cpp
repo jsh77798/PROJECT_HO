@@ -5,6 +5,7 @@
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 
 // Sets default values
 APPWeapon::APPWeapon()
@@ -14,12 +15,12 @@ APPWeapon::APPWeapon()
 }
 
 
-void APPWeapon::AddFakeProjectileData()
+void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees)
 {
 
 }
 
-void APPWeapon::TriggerFireAudio()
+void APPWeapon::TriggerFireAudio(USoundBase* Sound, AActor* Actor)
 {
 
 }

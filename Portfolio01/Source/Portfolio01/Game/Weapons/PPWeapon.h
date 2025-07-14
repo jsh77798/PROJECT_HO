@@ -9,6 +9,7 @@
 
 class USkeletalMeshComponent;
 class UAudioComponent;
+class USoundBase;
 
 
 UCLASS()
@@ -20,10 +21,10 @@ public:
 	APPWeapon();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void AddFakeProjectileData();
+	void AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees = 0.5);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void TriggerFireAudio();
+	void TriggerFireAudio(USoundBase* Sound, AActor* Actor);
 
 protected:
 	virtual void BeginPlay() override;
