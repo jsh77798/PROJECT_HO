@@ -4,16 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WeaponFire.generated.h"
+
+#include "PPWeaponFire.generated.h"
 
 UCLASS()
-class PORTFOLIO01_API AWeaponFire : public AActor
+class PORTFOLIO01_API APPWeaponFire : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AWeaponFire();
+	APPWeaponFire();
 
 protected:
 	// Called when the game starts or when spawned
