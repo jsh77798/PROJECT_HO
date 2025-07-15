@@ -24,7 +24,7 @@ void AEventActor::BeginPlay()
 void AEventActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 }
 
 //// ¿Ã∫•∆Æ ////

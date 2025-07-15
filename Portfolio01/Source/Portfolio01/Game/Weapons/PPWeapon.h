@@ -38,4 +38,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AudioComponent", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAudioComponent> AudioComponent;
+
+	FVector ImpactPositions;
+
+	FVector ImpactNormals;
+
+	EPhysicalSurface ImpactSurfaceTypes;
+
 };
