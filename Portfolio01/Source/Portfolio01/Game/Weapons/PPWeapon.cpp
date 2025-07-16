@@ -8,6 +8,9 @@
 #include "Sound/SoundBase.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Chaos/ChaosEngineInterface.h"
+//#include "Components/SceneComponent.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(PPWeapon)
 
 // Sets default values
 APPWeapon::APPWeapon()
@@ -19,7 +22,7 @@ APPWeapon::APPWeapon()
 void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees)
 {
 	FHitResult HitResult;
-	FVector Start = GetActorLocation(); // 또는 카메라, 총구 위치
+	FVector Start = SkeletalMesh->GetSocketLocation(TEXT("Muzzle")); // 또는 카메라, 총구 위치
 	FVector End = Start + (GetActorForwardVector() * 1000.0f); // 1000 단위 앞
 
 	FCollisionQueryParams QueryParams;

@@ -10,6 +10,7 @@
 class USkeletalMeshComponent;
 class UAudioComponent;
 class USoundBase;
+//class USceneComponent;
 
 
 UCLASS()
@@ -32,17 +33,16 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AudioComponent", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAudioComponent> AudioComponent;
-
 	FVector ImpactPositions;
 
 	FVector ImpactNormals;
 
 	EPhysicalSurface ImpactSurfaceTypes;
 
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AudioComponent", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAudioComponent> AudioComponent;
 };
