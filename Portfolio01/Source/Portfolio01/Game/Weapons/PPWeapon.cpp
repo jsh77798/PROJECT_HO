@@ -8,6 +8,7 @@
 #include "Sound/SoundBase.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Chaos/ChaosEngineInterface.h"
+#include "Kismet/KismetMathLibrary.h"
 //#include "Components/SceneComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPWeapon)
@@ -22,8 +23,13 @@ APPWeapon::APPWeapon()
 void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees)
 {
 	FHitResult HitResult;
-	FVector Start = SkeletalMesh->GetSocketLocation(TEXT("Muzzle")); // 또는 카메라, 총구 위치
-	FVector End = Start + (GetActorForwardVector() * 1000.0f); // 1000 단위 앞
+	FVector Start = SkeletalMesh->GetSocketLocation(TEXT("Muzzle")); 
+
+	FVector End = ImpactPositions - Start;
+	End = End.GetSafeNormal(0.0001);
+	End = UKismetMathLibrary::RandomUnitVectorInConeInRadians(End, ConeHalfAngleInDegrees);
+	End *= 1000000.0f;
+	End += Start;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this); // 자기 자신은 무시
