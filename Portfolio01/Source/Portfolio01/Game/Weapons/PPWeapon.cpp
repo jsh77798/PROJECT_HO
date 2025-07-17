@@ -9,7 +9,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Chaos/ChaosEngineInterface.h"
 #include "Kismet/KismetMathLibrary.h"
-//#include "Components/SceneComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPWeapon)
 
@@ -22,10 +22,11 @@ APPWeapon::APPWeapon()
 
 void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees)
 {
-	FHitResult HitResult;
+	FHitResult OutHit;
+
 	FVector Start = SkeletalMesh->GetSocketLocation(TEXT("Muzzle")); 
 
-	FVector End = ImpactPositions - Start;
+	FVector End = ImpactPositions[0] - Start;
 	End = End.GetSafeNormal(0.0001);
 	End = UKismetMathLibrary::RandomUnitVectorInConeInRadians(End, ConeHalfAngleInDegrees);
 	End *= 1000000.0f;
@@ -37,7 +38,7 @@ void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHa
 	for (int32 i = 1; i < NumerOfFakeProjectiles; ++i)
 	{
 		bool ReturnValue = GetWorld()->LineTraceSingleByChannel(
-			HitResult,
+			OutHit,
 			Start,
 			End,
 			ECC_Visibility,
@@ -46,10 +47,11 @@ void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHa
 
 		if (ReturnValue)
 		{
-			
+			ImpactSurfaceTypes.Add(UPhysicalMaterial::DetermineSurfaceType(OutHit.PhysMaterial.Get()));
+			ImpactPositions.Add(OutHit.Location);
+			ImpactNormals.Add(OutHit.Normal);
 		}
 	}
-
 }
 
 void APPWeapon::TriggerFireAudio(USoundBase* Sound, AActor* Actor)

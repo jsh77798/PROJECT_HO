@@ -10,7 +10,6 @@
 class USkeletalMeshComponent;
 class UAudioComponent;
 class USoundBase;
-//class USceneComponent;
 
 
 UCLASS()
@@ -33,11 +32,11 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	FVector ImpactPositions;
+	TArray<FVector> ImpactPositions;
 
-	FVector ImpactNormals;
+	TArray<FVector> ImpactNormals;
 
-	EPhysicalSurface ImpactSurfaceTypes;
+	TArray<EPhysicalSurface> ImpactSurfaceTypes;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))
