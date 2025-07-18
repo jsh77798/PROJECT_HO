@@ -10,6 +10,8 @@
 #include "Chaos/ChaosEngineInterface.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+#include "AudioParameterControllerInterface.h"
+#include "Kismet/GameplayStatics.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPWeapon)
 
@@ -56,7 +58,24 @@ void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHa
 
 void APPWeapon::TriggerFireAudio(USoundBase* Sound, AActor* Actor)
 {
+	IAudioParameterControllerInterface* AudioInterface = Cast<IAudioParameterControllerInterface>(AudioComponent);
 
+	if (IsValid(AudioComponent))
+	{
+		AudioInterface->SetTriggerParameter(TEXT("Fire"));
+	}
+	else 
+	{
+		UGameplayStatics::SpawnSoundAttached(
+			Sound,
+			Actor->FindComponentByClass<USkeletalMeshComponent>(),
+			TEXT("hand_r"),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			false
+		);
+	}
 }
 
 // Called when the game starts or when spawned
