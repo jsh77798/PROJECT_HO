@@ -66,7 +66,7 @@ void APPWeapon::TriggerFireAudio(USoundBase* Sound, AActor* Actor)
 	}
 	else 
 	{
-		UGameplayStatics::SpawnSoundAttached(
+		AudioComponent = UGameplayStatics::SpawnSoundAttached(
 			Sound,
 			Actor->FindComponentByClass<USkeletalMeshComponent>(),
 			TEXT("hand_r"),
@@ -75,6 +75,11 @@ void APPWeapon::TriggerFireAudio(USoundBase* Sound, AActor* Actor)
 			EAttachLocation::KeepRelativeOffset,
 			false
 		);
+
+		if (IsValid(AudioComponent)) 
+		{
+			AudioInterface->SetTriggerParameter(TEXT("Fire"));
+		}
 	}
 }
 
@@ -83,6 +88,23 @@ void APPWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<EPhysicalSurface> _ImpactSurfaceTypes)
+{
+	ImpactPositions = _ImpactPositions;
+	ImpactNormals = _ImpactNormals;
+	ImpactSurfaceTypes = _ImpactSurfaceTypes;
+	MuzzlePosition = SkeletalMesh->GetSocketLocation(TEXT("Muzzle"));
+
+	if (NeedsFakeProjectileData) 
+	{
+
+	}
+	else 
+	{
+
+	}
 }
 
 // Called every frame

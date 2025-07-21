@@ -29,6 +29,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<EPhysicalSurface> _ImpactSurfaceTypes);
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,6 +39,10 @@ public:
 	TArray<FVector> ImpactNormals;
 
 	TArray<EPhysicalSurface> ImpactSurfaceTypes;
+
+	FVector MuzzlePosition;
+
+	bool NeedsFakeProjectileData;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))
