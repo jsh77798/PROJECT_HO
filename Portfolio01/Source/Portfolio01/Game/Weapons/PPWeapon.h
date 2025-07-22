@@ -10,6 +10,7 @@
 class USkeletalMeshComponent;
 class UAudioComponent;
 class USoundBase;
+class UPPWeaponFire;
 
 
 UCLASS()
@@ -21,7 +22,7 @@ public:
 	APPWeapon();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees = 0.5);
+	void AddFakeProjectileData(int32 _NumerOfFakeProjectiles, float _ConeHalfAngleInDegrees = 0.5);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void TriggerFireAudio(USoundBase* Sound, AActor* Actor);
@@ -29,20 +30,29 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<EPhysicalSurface> _ImpactSurfaceTypes);
+	virtual void Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes);
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
 	TArray<FVector> ImpactPositions;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
 	TArray<FVector> ImpactNormals;
 
-	TArray<EPhysicalSurface> ImpactSurfaceTypes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	TArray<TEnumAsByte<EPhysicalSurface>> ImpactSurfaceTypes;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
 	FVector MuzzlePosition;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
 	bool NeedsFakeProjectileData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	int32 NumerOfFakeProjectiles;
+
+private:
+	TObjectPtr<UPPWeaponFire> WeaponFire;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))

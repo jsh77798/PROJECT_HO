@@ -3,6 +3,7 @@
 
 #include "PPWeapon.h"
 
+#include "PPWeaponFire.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
@@ -22,7 +23,7 @@ APPWeapon::APPWeapon()
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 }
 
-void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHalfAngleInDegrees)
+void APPWeapon::AddFakeProjectileData(int32 _NumerOfFakeProjectiles, float _ConeHalfAngleInDegrees)
 {
 	FHitResult OutHit;
 
@@ -30,14 +31,14 @@ void APPWeapon::AddFakeProjectileData(int32 NumerOfFakeProjectiles, float ConeHa
 
 	FVector End = ImpactPositions[0] - Start;
 	End = End.GetSafeNormal(0.0001);
-	End = UKismetMathLibrary::RandomUnitVectorInConeInRadians(End, ConeHalfAngleInDegrees);
+	End = UKismetMathLibrary::RandomUnitVectorInConeInRadians(End, _ConeHalfAngleInDegrees);
 	End *= 1000000.0f;
 	End += Start;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this); // 자기 자신은 무시
 
-	for (int32 i = 1; i < NumerOfFakeProjectiles; ++i)
+	for (int32 i = 1; i < _NumerOfFakeProjectiles; ++i)
 	{
 		bool ReturnValue = GetWorld()->LineTraceSingleByChannel(
 			OutHit,
@@ -90,7 +91,7 @@ void APPWeapon::BeginPlay()
 	
 }
 
-void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<EPhysicalSurface> _ImpactSurfaceTypes)
+void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes)
 {
 	ImpactPositions = _ImpactPositions;
 	ImpactNormals = _ImpactNormals;
@@ -99,18 +100,15 @@ void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNo
 
 	if (NeedsFakeProjectileData) 
 	{
-
+		AddFakeProjectileData(NumerOfFakeProjectiles, 5.0f);
 	}
-	else 
-	{
-
-	}
+	//IsValid(WeaponFire);
 }
 
 // Called every frame
-void APPWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void APPWeapon::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 
