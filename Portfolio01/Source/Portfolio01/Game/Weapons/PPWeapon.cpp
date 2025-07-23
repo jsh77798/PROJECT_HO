@@ -3,7 +3,7 @@
 
 #include "PPWeapon.h"
 
-#include "PPWeaponFire.h"
+//#include "PPWeaponFire.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
@@ -13,6 +13,8 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "AudioParameterControllerInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraSystem.h"
+#include "Engine/StaticMesh.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPWeapon)
 
@@ -91,19 +93,18 @@ void APPWeapon::BeginPlay()
 	
 }
 
-void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes)
-{
-	ImpactPositions = _ImpactPositions;
-	ImpactNormals = _ImpactNormals;
-	ImpactSurfaceTypes = _ImpactSurfaceTypes;
-	MuzzlePosition = SkeletalMesh->GetSocketLocation(TEXT("Muzzle"));
-
-	if (NeedsFakeProjectileData) 
-	{
-		AddFakeProjectileData(NumerOfFakeProjectiles, 5.0f);
-	}
-	//IsValid(WeaponFire);
-}
+//void APPWeapon::Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes)
+//{
+//	ImpactPositions = _ImpactPositions;
+//	ImpactNormals = _ImpactNormals;
+//	ImpactSurfaceTypes = _ImpactSurfaceTypes;
+//	MuzzlePosition = SkeletalMesh->GetSocketLocation(TEXT("Muzzle"));
+//
+//	if (NeedsFakeProjectileData) 
+//	{
+//		AddFakeProjectileData(NumerOfFakeProjectiles, 5.0f);
+//	}
+//}
 
 // Called every frame
 //void APPWeapon::Tick(float DeltaTime)

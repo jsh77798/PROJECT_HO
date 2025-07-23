@@ -11,6 +11,8 @@ class USkeletalMeshComponent;
 class UAudioComponent;
 class USoundBase;
 class UPPWeaponFire;
+class UNiagaraSystem;
+class UStaticMesh;
 
 
 UCLASS()
@@ -30,7 +32,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes);
+	//virtual void Fire(TArray<FVector> _ImpactPositions, TArray<FVector> _ImpactNormals, TArray<TEnumAsByte<EPhysicalSurface>> _ImpactSurfaceTypes);
 
 public:	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
@@ -51,8 +53,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
 	int32 NumerOfFakeProjectiles;
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	TObjectPtr<UNiagaraSystem> ShellEjectSystem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	TObjectPtr<UNiagaraSystem> MuzzleFlashSystem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	TObjectPtr<UNiagaraSystem> TracerSystem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PP")
+	TObjectPtr<UStaticMesh> ShellEjectMesh;
+
 private:
-	TObjectPtr<UPPWeaponFire> WeaponFire;
+	//TObjectPtr<UPPWeaponFire> WeaponFire;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SkeletalMesh", Meta = (AllowPrivateAccess = "true"))
