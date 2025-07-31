@@ -53,7 +53,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	EDeathState GetDeathState() const { return DeathState; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Lyra|Health", Meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "PPHealth", Meta = (ExpandBoolAsExecs = "ReturnValue"))
 	bool IsDeadOrDying() const { return (DeathState > EDeathState::NotDead); }
 
 	// Begins the death sequence for the owner.

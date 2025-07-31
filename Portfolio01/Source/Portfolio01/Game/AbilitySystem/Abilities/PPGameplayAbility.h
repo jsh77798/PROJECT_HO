@@ -78,8 +78,8 @@ public:
 	TObjectPtr<APlayerController> PlayerController = nullptr;
 
 	// All the reasons why this ability has failed
-	//UPROPERTY(BlueprintReadWrite)
-	//FGameplayTagContainer FailureTags;
+	UPROPERTY(BlueprintReadWrite)
+	FGameplayTagContainer FailureTags;
 
 	UPROPERTY(BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> FailureMontage = nullptr;
