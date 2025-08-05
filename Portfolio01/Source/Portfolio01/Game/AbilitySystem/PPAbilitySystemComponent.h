@@ -25,7 +25,7 @@ struct FGameplayAbilityTargetDataHandle;
 PORTFOLIO01_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Gameplay_AbilityInputBlocked);
 
 /**
- * ULyraAbilitySystemComponent
+ * UPPAbilitySystemComponent
  *
  *	Base ability system component class used by this project.
  */
@@ -56,9 +56,9 @@ public:
 	void ClearAbilityInput();
 
 	bool IsActivationGroupBlocked(EPPAbilityActivationGroup Group) const;
-	//void AddAbilityToActivationGroup(EPPAbilityActivationGroup Group, UPPGameplayAbility* LyraAbility);
-	//void RemoveAbilityFromActivationGroup(EPPAbilityActivationGroup Group, UPPGameplayAbility* LyraAbility);
-	//void CancelActivationGroupAbilities(EPPAbilityActivationGroup Group, UPPGameplayAbility* IgnoreLyraAbility, bool bReplicateCancelAbility);
+	//void AddAbilityToActivationGroup(EPPAbilityActivationGroup Group, UPPGameplayAbility* PPAbility);
+	//void RemoveAbilityFromActivationGroup(EPPAbilityActivationGroup Group, UPPGameplayAbility* PPAbility);
+	//void CancelActivationGroupAbilities(EPPAbilityActivationGroup Group, UPPGameplayAbility* IgnorePPAbility, bool bReplicateCancelAbility);
 
 	// Uses a gameplay effect to add the specified dynamic granted tag.
 	//void AddDynamicTagGameplayEffect(const FGameplayTag& Tag);

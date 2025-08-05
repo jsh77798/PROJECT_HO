@@ -20,7 +20,7 @@ class UAnimMontage;
 class UPPAbilityCost;
 class UPPAbilitySystemComponent;
 class UCameraMode;
-//class ULyraHeroComponent;
+//class UPPHeroComponent;
 class UObject;
 struct FFrame;
 struct FGameplayAbilityActorInfo;
@@ -108,7 +108,7 @@ public:
 	APPCharacter* GetPPCharacterFromActorInfo() const;
 
 	//UFUNCTION(BlueprintCallable, Category = "Ability")
-	//ULyraHeroComponent* GetHeroComponentFromActorInfo() const;
+	//UPPHeroComponent* GetHeroComponentFromActorInfo() const;
 
 	EPPAbilityActivationPolicy GetActivationPolicy() const { return ActivationPolicy; }
 	EPPAbilityActivationGroup GetActivationGroup() const { return ActivationGroup; }

@@ -11,10 +11,10 @@
 #include "Game/Character/PPCharacter.h"
 #include "Game/PPGameplayTags.h"
 #include "PPAbilityCost.h"
-//#include "Character/LyraHeroComponent.h"
+//#include "Character/PPHeroComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemGlobals.h"
-//#include "LyraAbilitySimpleFailureMessage.h"
+//#include "PPAbilitySimpleFailureMessage.h"
 //#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Game/AbilitySystem/PPAbilitySourceInterface.h"
 #include "Game/AbilitySystem/PPGameplayEffectContext.h"
@@ -98,9 +98,9 @@ APPCharacter* UPPGameplayAbility::GetPPCharacterFromActorInfo() const
 	return (CurrentActorInfo ? Cast<APPCharacter>(CurrentActorInfo->AvatarActor.Get()) : nullptr);
 }
 
-//ULyraHeroComponent* ULyraGameplayAbility::GetHeroComponentFromActorInfo() const
+//UPPHeroComponent* UPPGameplayAbility::GetHeroComponentFromActorInfo() const
 //{
-//	return (CurrentActorInfo ? ULyraHeroComponent::FindHeroComponent(CurrentActorInfo->AvatarActor.Get()) : nullptr);
+//	return (CurrentActorInfo ? UPPHeroComponent::FindHeroComponent(CurrentActorInfo->AvatarActor.Get()) : nullptr);
 //}
 
 /*
@@ -113,7 +113,7 @@ void UPPGameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagConta
 		{
 			if (const FText* pUserFacingMessage = FailureTagToUserFacingMessages.Find(Reason))
 			{
-				FLyraAbilitySimpleFailureMessage Message;
+				FPPAbilitySimpleFailureMessage Message;
 				Message.PlayerController = GetActorInfo().PlayerController.Get();
 				Message.FailureTags = FailedReason;
 				Message.UserFacingReason = *pUserFacingMessage;
@@ -126,7 +126,7 @@ void UPPGameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagConta
 
 		if (UAnimMontage* pMontage = FailureTagToAnimMontage.FindRef(Reason))
 		{
-			FLyraAbilityMontageFailureMessage Message;
+			FPPAbilityMontageFailureMessage Message;
 			Message.PlayerController = GetActorInfo().PlayerController.Get();
 			Message.FailureTags = FailedReason;
 			Message.FailureMontage = pMontage;
@@ -330,7 +330,7 @@ bool UPPGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySystemC
 		bBlocked = true;
 	}
 
-	const UPPAbilitySystemComponent* LyraASC = Cast<UPPAbilitySystemComponent>(&AbilitySystemComponent);
+	const UPPAbilitySystemComponent* PPASC = Cast<UPPAbilitySystemComponent>(&AbilitySystemComponent);
 	static FGameplayTagContainer AllRequiredTags;
 	static FGameplayTagContainer AllBlockedTags;
 
@@ -338,9 +338,9 @@ bool UPPGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySystemC
 	AllBlockedTags = ActivationBlockedTags;
 
 	// Expand our ability tags to add additional required/blocked tags
-	if (LyraASC)
+	if (PPASC)
 	{
-		LyraASC->GetAdditionalActivationTagRequirements(AbilityTags, AllRequiredTags, AllBlockedTags);
+		PPASC->GetAdditionalActivationTagRequirements(AbilityTags, AllRequiredTags, AllBlockedTags);
 	}
 
 	// Check to see the required/blocked tags for this ability
@@ -353,7 +353,7 @@ bool UPPGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySystemC
 
 		if (AbilitySystemComponentTags.HasAny(AllBlockedTags))
 		{
-			const FLyraGameplayTags& GameplayTags = FLyraGameplayTags::Get();
+			const FPPGameplayTags& GameplayTags = FPPGameplayTags::Get();
 			if (OptionalRelevantTags && AbilitySystemComponentTags.HasTag(GameplayTags.Status_Death))
 			{
 				// If player is dead and was rejected due to blocking tags, give that feedback
@@ -459,7 +459,7 @@ void UPPGameplayAbility::SetCameraMode(TSubclassOf<UCameraMode> CameraMode)
 {
 	ENSURE_ABILITY_IS_INSTANTIATED_OR_RETURN(SetCameraMode, );
 
-	if (ULyraHeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
+	if (UPPHeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
 	{
 		HeroComponent->SetAbilityCameraMode(CameraMode, CurrentSpecHandle);
 		ActiveCameraMode = CameraMode;
@@ -474,7 +474,7 @@ void UPPGameplayAbility::ClearCameraMode()
 
 	if (ActiveCameraMode)
 	{
-		if (ULyraHeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
+		if (UPPHeroComponent* HeroComponent = GetHeroComponentFromActorInfo())
 		{
 			HeroComponent->ClearAbilityCameraMode(CurrentSpecHandle);
 		}

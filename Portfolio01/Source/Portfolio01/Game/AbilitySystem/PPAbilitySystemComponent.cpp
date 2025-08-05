@@ -94,7 +94,7 @@ void UPPAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 		//}
 
 		// Register with the global system once we actually have a pawn avatar. We wait until this time since some globally-applied effects may require an avatar.
-		//if (ULyraGlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<ULyraGlobalAbilitySystem>(GetWorld()))
+		//if (UPPGlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UPPGlobalAbilitySystem>(GetWorld()))
 		//{
 		//	GlobalAbilitySystem->RegisterASC(this);
 		//}
@@ -413,7 +413,7 @@ void UPPAbilitySystemComponent::ClearAbilityInput()
 //
 //void UPPAbilitySystemComponent::HandleAbilityFailed(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 //{
-//	//UE_LOG(LogLyraAbilitySystem, Warning, TEXT("Ability %s failed to activate (tags: %s)"), *GetPathNameSafe(Ability), *FailureReason.ToString());
+//	//UE_LOG(LogPPAbilitySystem, Warning, TEXT("Ability %s failed to activate (tags: %s)"), *GetPathNameSafe(Ability), *FailureReason.ToString());
 //
 //	if (const UPPGameplayAbility* PPAbility = Cast<const UPPGameplayAbility>(Ability))
 //	{

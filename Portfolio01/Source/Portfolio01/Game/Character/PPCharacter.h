@@ -24,7 +24,7 @@ struct FGameplayTagContainer;
 
 
 /**
- * FLyraReplicatedAcceleration: Compressed representation of acceleration
+ * FPPReplicatedAcceleration: Compressed representation of acceleration
  */
 USTRUCT()
 struct FPPReplicatedAcceleration

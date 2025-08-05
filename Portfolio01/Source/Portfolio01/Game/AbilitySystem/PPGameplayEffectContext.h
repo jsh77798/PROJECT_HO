@@ -31,7 +31,7 @@ struct FPPGameplayEffectContext : public FGameplayEffectContext
 	{
 	}
 
-	/** Returns the wrapped FLyraGameplayEffectContext from the handle, or nullptr if it doesn't exist or is the wrong type */
+	/** Returns the wrapped FPPGameplayEffectContext from the handle, or nullptr if it doesn't exist or is the wrong type */
 	static PORTFOLIO01_API FPPGameplayEffectContext* ExtractEffectContext(struct FGameplayEffectContextHandle Handle);
 
 	/** Sets the object used as the ability source */
