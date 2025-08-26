@@ -5,7 +5,7 @@
 	"Description": "",
 	"Modules": [
 		{
-			"Name": "Portfolio01",
+			"Name": "PPGame",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
@@ -15,6 +15,11 @@
 				"UMG",
 				"GameplayAbilities"
 			]
+		},
+		{
+			"Name": "PPEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

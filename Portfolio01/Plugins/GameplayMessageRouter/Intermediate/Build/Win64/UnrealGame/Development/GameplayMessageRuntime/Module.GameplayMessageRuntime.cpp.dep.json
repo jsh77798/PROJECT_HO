@@ -1,0 +1,31 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\development\\gameplaymessageruntime\\module.gameplaymessageruntime.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\portfolio\\project_ho\\portfolio01\\intermediate\\build\\win64\\ppgame\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\development\\gameplaymessageruntime\\definitions.gameplaymessageruntime.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\private\\gameframework\\asyncaction_listenforgameplaymessage.cpp",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\public\\gameframework\\asyncaction_listenforgameplaymessage.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\source\\runtime\\engine\\classes\\engine\\cancellableasyncaction.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\source\\runtime\\engine\\classes\\kismet\\blueprintasyncactionbase.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\intermediate\\build\\win64\\unrealgame\\inc\\engine\\uht\\blueprintasyncactionbase.generated.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\intermediate\\build\\win64\\unrealgame\\inc\\engine\\uht\\cancellableasyncaction.generated.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\public\\gameframework\\gameplaymessagesubsystem.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\public\\gameframework\\gameplaymessagetypes2.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\source\\runtime\\gameplaytags\\classes\\gameplaytagcontainer.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
+            "c:\\program files\\epic games\\ue_5.1\\engine\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaymessageruntime\\uht\\gameplaymessagetypes2.generated.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaymessageruntime\\uht\\gameplaymessagesubsystem.generated.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaymessageruntime\\uht\\asyncaction_listenforgameplaymessage.generated.h",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaymessageruntime\\uht\\asyncaction_listenforgameplaymessage.gen.cpp",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\private\\gameframework\\gameplaymessageruntime.cpp",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\source\\gameplaymessageruntime\\private\\gameframework\\gameplaymessagesubsystem.cpp",
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealgame\\inc\\gameplaymessageruntime\\uht\\gameplaymessagesubsystem.gen.cpp"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

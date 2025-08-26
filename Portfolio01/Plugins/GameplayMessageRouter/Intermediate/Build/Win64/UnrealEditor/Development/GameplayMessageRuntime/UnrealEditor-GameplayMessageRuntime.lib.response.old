@@ -1,0 +1,14 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-GameplayMessageRuntime.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Intermediate\Build\Win64\PPEditor\Development\Engine\SharedPCH.Engine.ShadowErrors.h.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageRuntime\Module.GameplayMessageRuntime.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageRuntime\GameplayMessageRuntime.init.gen.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageRuntime\GameplayMessageTypes2.gen.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageRuntime\Default.rc2.res"
+/OUT:"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageRuntime\UnrealEditor-GameplayMessageRuntime.lib"

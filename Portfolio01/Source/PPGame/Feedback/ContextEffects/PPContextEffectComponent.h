@@ -1,0 +1,83 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+#pragma once
+
+#include "Components/ActorComponent.h"
+#include "Containers/Array.h"
+#include "Containers/Set.h"
+#include "Engine/EngineTypes.h"
+#include "GameplayTagContainer.h"
+#include "PPContextEffectsInterface.h"
+#include "Math/MathFwd.h"
+#include "Math/Rotator.h"
+#include "Math/Vector.h"
+#include "UObject/NameTypes.h"
+#include "UObject/SoftObjectPtr.h"
+#include "UObject/UObjectGlobals.h"
+
+#include "PPContextEffectComponent.generated.h"
+
+class UAnimSequenceBase;
+class UAudioComponent;
+class UPPContextEffectsLibrary;
+class UNiagaraComponent;
+class UObject;
+class USceneComponent;
+struct FFrame;
+struct FHitResult;
+
+UCLASS( ClassGroup=(Custom), hidecategories = (Variable, Tags, ComponentTick, ComponentReplication, Activation, Cooking, AssetUserData, Collision), CollapseCategories, meta=(BlueprintSpawnableComponent) )
+class PPGAME_API UPPContextEffectComponent : public UActorComponent, public IPPContextEffectsInterface
+{
+	GENERATED_BODY()
+
+public:	
+	// Sets default values for this component's properties
+	UPPContextEffectComponent();
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+	// Called when the game ends
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
+	// AnimMotionEffect Implementation
+	UFUNCTION(BlueprintCallable)
+	virtual void AnimMotionEffect_Implementation(const FName Bone, const FGameplayTag MotionEffect, USceneComponent* StaticMeshComponent,
+		const FVector LocationOffset, const FRotator RotationOffset, const UAnimSequenceBase* AnimationSequence,
+		const bool bHitSuccess, const FHitResult HitResult, FGameplayTagContainer Contexts,
+		FVector VFXScale = FVector(1), float AudioVolume = 1, float AudioPitch = 1) override;
+
+	// Auto-Convert Physical Surface from Trace Result to Context
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bConvertPhysicalSurfaceToContext = true;
+
+	// Default Contexts
+	UPROPERTY(EditAnywhere)
+	FGameplayTagContainer DefaultEffectContexts;
+
+	// Default Libraries for this Actor
+	UPROPERTY(EditAnywhere)
+	TSet<TSoftObjectPtr<UPPContextEffectsLibrary>> DefaultContextEffectsLibraries;
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateEffectContexts(FGameplayTagContainer NewEffectContexts);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateLibraries(TSet<TSoftObjectPtr<UPPContextEffectsLibrary>> NewContextEffectsLibraries);
+
+private:
+	UPROPERTY(Transient)
+	FGameplayTagContainer CurrentContexts;
+
+	UPROPERTY(Transient)
+	TSet<TSoftObjectPtr<UPPContextEffectsLibrary>> CurrentContextEffectsLibraries;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UAudioComponent>> ActiveAudioComponents;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UNiagaraComponent>> ActiveNiagaraComponents;
+};

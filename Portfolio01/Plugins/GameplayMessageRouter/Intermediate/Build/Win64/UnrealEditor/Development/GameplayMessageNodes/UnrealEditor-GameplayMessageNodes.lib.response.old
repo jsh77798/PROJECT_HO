@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-GameplayMessageNodes.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Intermediate\Build\Win64\PPEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageNodes\Module.GameplayMessageNodes.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageNodes\GameplayMessageNodes.init.gen.cpp.obj"
+"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageNodes\Default.rc2.res"
+/OUT:"C:\PORTFOLIO\PROJECT_HO\Portfolio01\Plugins\GameplayMessageRouter\Intermediate\Build\Win64\UnrealEditor\Development\GameplayMessageNodes\UnrealEditor-GameplayMessageNodes.lib"

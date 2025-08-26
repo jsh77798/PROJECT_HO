@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaymessageruntime\\uht\\gameplaymessageruntime.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\portfolio\\project_ho\\portfolio01\\intermediate\\build\\win64\\ppeditor\\development\\engine\\sharedpch.engine.shadowerrors.h.pch",
+        "Includes": [
+            "c:\\portfolio\\project_ho\\portfolio01\\plugins\\gameplaymessagerouter\\intermediate\\build\\win64\\unrealeditor\\development\\gameplaymessageruntime\\definitions.gameplaymessageruntime.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
