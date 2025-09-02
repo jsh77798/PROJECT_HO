@@ -7,6 +7,7 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 
 
 APPAIController::APPAIController()
@@ -41,6 +42,8 @@ APPAIController::APPAIController()
     // ...
 
     AIPerception->OnPerceptionUpdated.AddDynamic(this, &APPAIController::PerceptionUpdated);
+
+    BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
 }
 
 void APPAIController::PerceptionUpdated(const TArray<AActor*>& UpdatedActors)

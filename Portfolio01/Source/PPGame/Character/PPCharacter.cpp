@@ -6,10 +6,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Global/Portfolio_GameInstance.h"
 #include "HealthComponent.h"
+#include "PPAIController.h"
 
 APPCharacter::APPCharacter()
 {
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
+	AIControllerClass = APPAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void APPCharacter::PostInitializeComponents()

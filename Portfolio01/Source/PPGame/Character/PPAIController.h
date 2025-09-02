@@ -11,6 +11,7 @@ class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Damage;
+class UBehaviorTreeComponent;
 
 
 UENUM(BlueprintType)
@@ -53,5 +54,11 @@ protected:
 	TObjectPtr<UAISenseConfig_Sight> SightConfig;
 	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
 	TObjectPtr<UAISenseConfig_Damage> DamageSenseConfig;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBehaviorTreeComponent> BehaviorTreeComponent;
+
 	//참조사이트 https://dlaiml.tistory.com/entry/UE5-AI-Perception-C
+    //           https://unreal6.tistory.com/m/209
 };
