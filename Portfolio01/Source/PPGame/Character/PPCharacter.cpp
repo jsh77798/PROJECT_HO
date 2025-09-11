@@ -6,7 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Global/Portfolio_GameInstance.h"
 #include "HealthComponent.h"
-#include "PPAIController.h"
+#include "AI/PPAIController.h"
 
 APPCharacter::APPCharacter()
 {

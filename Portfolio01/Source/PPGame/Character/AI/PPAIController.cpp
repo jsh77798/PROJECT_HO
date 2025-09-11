@@ -1,14 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/PPAIController.h"
+#include "Character/AI/PPAIController.h"
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
-#include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardData.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include <NavigationSystem.h>
+#include <Blueprint/AIBlueprintHelperLibrary.h>
+#include "Navigation/PathFollowingComponent.h"
+#include "LogChannels.h"
 
+
+const FName APPAIController::OriginPosKey(TEXT("OriginPos"));
+const FName APPAIController::PatrolPosKey(TEXT("PatrolPos"));
 
 APPAIController::APPAIController()
 {
@@ -43,7 +52,42 @@ APPAIController::APPAIController()
 
     AIPerception->OnPerceptionUpdated.AddDynamic(this, &APPAIController::PerceptionUpdated);
 
-    BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
+    //
+    static ConstructorHelpers::FObjectFinder<UBlackboardData> BBObj(TEXT("/Script/AIModule.BlackboardData'/Game/Characters/Enemies/AI/BT/BB_AI.BB_AI'"));
+    if (BBObj.Succeeded())
+    {
+        BBAsset = BBObj.Object;
+    }
+
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BTObj(TEXT("/Script/AIModule.BehaviorTree'/Game/Characters/Enemies/AI/BT/BT_AI.BT_AI'"));
+	if (BTObj.Succeeded()) 
+    { 
+        BTAsset=BTObj.Object;
+    }
+}
+
+void APPAIController::OnPossess(APawn* InPawn)
+{
+    Super::OnPossess(InPawn);
+
+	UBlackboardComponent* BlackboardComponent = Blackboard;
+	if (UseBlackboard(BBAsset, BlackboardComponent))
+	{
+        BlackboardComponent->SetValueAsVector(OriginPosKey, InPawn->GetActorLocation());
+		if (RunBehaviorTree(BTAsset))
+		{
+			// Successfully started behavior tree
+		}
+		else
+		{
+			UE_LOG(LogPP, Error, TEXT("couldn't RunBehaviorTree(BTAsset)"));
+		}
+	}
+}
+
+void APPAIController::OnUnPossess()
+{
+    Super::OnUnPossess();
 }
 
 void APPAIController::PerceptionUpdated(const TArray<AActor*>& UpdatedActors)
@@ -101,7 +145,6 @@ FAIStimulus APPAIController::CanSenseActor(AActor* Actor, EAIPerceptionSense AIP
     for (const FAIStimulus& AIStimulus : ActorPerceptionBlueprintInfo.LastSensedStimuli)
     {
         LastSensedStimulusClass = UAIPerceptionSystem::GetSenseClassForStimulus(this, AIStimulus);
-
 
         if (QuerySenseClass == LastSensedStimulusClass)
         {

@@ -11,7 +11,6 @@ class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Damage;
-class UBehaviorTreeComponent;
 
 
 UENUM(BlueprintType)
@@ -36,6 +35,14 @@ class PPGAME_API APPAIController : public AAIController
 public:
 	APPAIController();
 
+	// 빙의 시점
+	virtual void OnPossess(APawn* InPawn) override; 
+	// 빙의 해제
+	virtual void OnUnPossess() override;
+
+	static const FName OriginPosKey;
+	static const FName PatrolPosKey;
+
 public:
 	UFUNCTION()
 	void PerceptionUpdated(const TArray<AActor*>& UpdatedActors);
@@ -56,8 +63,11 @@ protected:
 	TObjectPtr<UAISenseConfig_Damage> DamageSenseConfig;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UBehaviorTreeComponent> BehaviorTreeComponent;
+	UPROPERTY()
+	class UBlackboardData* BBAsset;
+
+	UPROPERTY()
+	class UBehaviorTree* BTAsset;
 
 	//참조사이트 https://dlaiml.tistory.com/entry/UE5-AI-Perception-C
     //           https://unreal6.tistory.com/m/209
