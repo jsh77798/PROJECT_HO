@@ -18,6 +18,7 @@
 
 const FName APPAIController::OriginPosKey(TEXT("OriginPos"));
 const FName APPAIController::PatrolPosKey(TEXT("PatrolPos"));
+const FName APPAIController::TargetKey(TEXT("Target"));
 
 APPAIController::APPAIController()
 {

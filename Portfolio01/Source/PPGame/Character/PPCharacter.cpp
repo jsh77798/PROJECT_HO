@@ -3,10 +3,12 @@
 
 #include "PPCharacter.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
+#include "PPCharacterMovementComponent.h"
 #include "Global/Portfolio_GameInstance.h"
 #include "HealthComponent.h"
 #include "AI/PPAIController.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(PPCharacter)
 
 APPCharacter::APPCharacter()
 {
@@ -35,12 +37,13 @@ void APPCharacter::BeginPlay()
 	if (Inst != nullptr) { AbilityData = Inst->GetAbilityData(CharacterName); }
 	
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = CharacterData->bOrientRotationToMovement; 
-	GetCharacterMovement()->RotationRate = CharacterData->RotationRate; 
+	UPPCharacterMovementComponent* PPMoveComp = CastChecked<UPPCharacterMovementComponent>(GetCharacterMovement());
+	PPMoveComp->bOrientRotationToMovement = CharacterData->bOrientRotationToMovement;
+	PPMoveComp->RotationRate = CharacterData->RotationRate;
 	// instead of recompiling to adjust them
-	GetCharacterMovement()->MaxWalkSpeed = CharacterData->MaxWalkSpeed; 
-	GetCharacterMovement()->MinAnalogWalkSpeed = CharacterData->MinAnalogWalkSpeed; 
-	GetCharacterMovement()->BrakingDecelerationWalking = CharacterData->BrakingDecelerationWalking; 
+	PPMoveComp->MaxWalkSpeed = CharacterData->MaxWalkSpeed;
+	PPMoveComp->MinAnalogWalkSpeed = CharacterData->MinAnalogWalkSpeed;
+	PPMoveComp->BrakingDecelerationWalking = CharacterData->BrakingDecelerationWalking;
 }
 
 void APPCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)

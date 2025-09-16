@@ -15,10 +15,6 @@ struct PPGAME_API FDefaultCharacterData : public FTableRowBase
 
 	GENERATED_BODY()
 
-	/** AI */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI") 
-		class UBehaviorTree* AI;
-
 	/** Status */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status") 
 	    int32 Health = 0;

@@ -1,4 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
+//참조사이트 https://dlaiml.tistory.com/entry/UE5-AI-Perception-C
+//           https://unreal6.tistory.com/m/209
+
 
 #pragma once
 
@@ -42,6 +45,7 @@ public:
 
 	static const FName OriginPosKey;
 	static const FName PatrolPosKey;
+	static const FName TargetKey;
 
 public:
 	UFUNCTION()
@@ -68,7 +72,4 @@ private:
 
 	UPROPERTY()
 	class UBehaviorTree* BTAsset;
-
-	//참조사이트 https://dlaiml.tistory.com/entry/UE5-AI-Perception-C
-    //           https://unreal6.tistory.com/m/209
 };
