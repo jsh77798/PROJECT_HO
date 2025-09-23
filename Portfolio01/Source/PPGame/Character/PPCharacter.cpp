@@ -10,7 +10,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PPCharacter)
 
-APPCharacter::APPCharacter()
+APPCharacter::APPCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UPPCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 

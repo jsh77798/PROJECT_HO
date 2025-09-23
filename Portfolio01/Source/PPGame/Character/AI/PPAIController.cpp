@@ -162,7 +162,7 @@ void APPAIController::HandleSensedSight(AActor* Actor)
     // ...
     //if (bConvertToAttack && PlayerCharacter != nullptr && PlayerCharacter == Actor)
     //{
-    //    SwitchToAttackState(Actor);
+    //   SwitchToAttackState(Actor);
     //}
     // ...
 }

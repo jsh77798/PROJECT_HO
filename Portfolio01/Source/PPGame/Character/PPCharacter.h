@@ -55,7 +55,7 @@ class PPGAME_API APPCharacter : public AModularCharacter
 	//class UInputAction* MoveAction;
 
 public:
-	APPCharacter();
+	APPCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void PostInitializeComponents() override;
 
 public:
