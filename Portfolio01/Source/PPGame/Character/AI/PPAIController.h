@@ -46,6 +46,7 @@ public:
 	static const FName OriginPosKey;
 	static const FName PatrolPosKey;
 	static const FName TargetKey;
+	static const FName NoisePosKey;
 
 public:
 	UFUNCTION()
@@ -72,4 +73,7 @@ private:
 
 	UPROPERTY()
 	class UBehaviorTree* BTAsset;
+
+	UPROPERTY()
+	class UBlackboardComponent* BBComponent;
 };

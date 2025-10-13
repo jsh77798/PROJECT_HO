@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayCueInterface.h"
+#include "GameplayTagAssetInterface.h"
 #include "Engine/DataTable.h"
 #include "Data/DefaultCharacterData.h"
 #include "Data/AbilityData.h"
@@ -24,7 +27,7 @@ struct FGameplayTagContainer;
 
 
 UCLASS()
-class PPGAME_API APPCharacter : public AModularCharacter
+class PPGAME_API APPCharacter : public AModularCharacter, public IAbilitySystemInterface, public IGameplayCueInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +40,15 @@ class PPGAME_API APPCharacter : public AModularCharacter
 
 	/** AbilityData */
 	struct FAbilityData* AbilityData;
+
+	UFUNCTION(BlueprintCallable, Category = "PP|Character")
+	UPPAbilitySystemComponent* GetPPAbilitySystemComponent() const;
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+	virtual bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override;
+	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
+	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 
 	/** CharacterData */
 	//UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -54,9 +66,13 @@ class PPGAME_API APPCharacter : public AModularCharacter
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	//class UInputAction* MoveAction;
 
-public:
+protected:
 	APPCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void PostInitializeComponents() override;
+
+	void InitializeGameplayTags();
+
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
+	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Character")

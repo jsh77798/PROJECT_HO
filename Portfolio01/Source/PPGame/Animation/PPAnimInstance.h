@@ -10,6 +10,26 @@
 
 class UAbilitySystemComponent;
 
+USTRUCT(BlueprintType)
+struct FPPAnimStruct_CardinalDirections
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cardinal")
+    UAnimSequence* Forward = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cardinal")
+    UAnimSequence* Backward = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cardinal")
+    UAnimSequence* Left = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cardinal")
+    UAnimSequence* Right = nullptr;
+};
+
 
 /**
  * UPPAnimInstance

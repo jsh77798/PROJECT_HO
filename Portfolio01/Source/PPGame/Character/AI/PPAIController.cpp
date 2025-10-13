@@ -19,6 +19,8 @@
 const FName APPAIController::OriginPosKey(TEXT("OriginPos"));
 const FName APPAIController::PatrolPosKey(TEXT("PatrolPos"));
 const FName APPAIController::TargetKey(TEXT("Target"));
+const FName APPAIController::NoisePosKey(TEXT("NoisePos"));
+
 
 APPAIController::APPAIController()
 {
@@ -71,10 +73,11 @@ void APPAIController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
 
-	UBlackboardComponent* BlackboardComponent = Blackboard;
-	if (UseBlackboard(BBAsset, BlackboardComponent))
+    BBComponent = Blackboard;
+	//UBlackboardComponent* BlackboardComponent = Blackboard;
+	if (UseBlackboard(BBAsset, BBComponent))
 	{
-        BlackboardComponent->SetValueAsVector(OriginPosKey, InPawn->GetActorLocation());
+        BBComponent->SetValueAsVector(OriginPosKey, InPawn->GetActorLocation());
 		if (RunBehaviorTree(BTAsset))
 		{
 			// Successfully started behavior tree
@@ -159,25 +162,26 @@ FAIStimulus APPAIController::CanSenseActor(AActor* Actor, EAIPerceptionSense AIP
 
 void APPAIController::HandleSensedSight(AActor* Actor)
 {
-    // ...
-    //if (bConvertToAttack && PlayerCharacter != nullptr && PlayerCharacter == Actor)
-    //{
-    //   SwitchToAttackState(Actor);
-    //}
-    // ...
+	if (UseBlackboard(BBAsset, BBComponent))
+	{
+		BBComponent->SetValueAsObject(TargetKey, Actor);
+	}
+    //GetBlackboardComponent()->SetValueAsObject(APPAIController::TargetKey, Actor);
 }
 
 void APPAIController::HandleSensedHearing(FVector NoiseLocation)
 {
-    // ...
-    //SwitchToInvestigateState(NoiseLocation);
-    // ...
+    if (UseBlackboard(BBAsset, BBComponent))
+    {
+		BBComponent->SetValueAsVector(NoisePosKey, NoiseLocation);
+    }
 }
 
 void APPAIController::HandleSensedDamage(AActor* Actor)
 {
-	// ...
-	//SwitchToAttackState(Actor);
-	// ...
+    if (UseBlackboard(BBAsset, BBComponent))
+    {
+        BBComponent->SetValueAsObject(TargetKey, Actor);
+    }
 }
 // ...
