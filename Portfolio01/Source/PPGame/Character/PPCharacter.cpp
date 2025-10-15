@@ -3,8 +3,10 @@
 
 #include "PPCharacter.h"
 
+#include "PPPawnData.h"
 #include "AbilitySystem/PPAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/PPAbilitySet.h"
 #include "PPGameplayTags.h"
 #include "PPCharacterMovementComponent.h"
 #include "Global/Portfolio_GameInstance.h"
@@ -16,36 +18,28 @@
 APPCharacter::APPCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UPPCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	AbilitySystemComponent = nullptr;
+	PawnData = nullptr;
+
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 
 	AIControllerClass = APPAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-UPPAbilitySystemComponent* APPCharacter::GetPPAbilitySystemComponent() const
-{
-	return Cast<UPPAbilitySystemComponent>(GetAbilitySystemComponent());
-}
-
-UAbilitySystemComponent* APPCharacter::GetAbilitySystemComponent() const
-{
-	return Cast<UPPAbilitySystemComponent>(GetAbilitySystemComponent());
-	//return PawnExtComponent->GetPPAbilitySystemComponent();
-}
-
 void APPCharacter::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
 {
-	if (const UPPAbilitySystemComponent* PPASC = GetPPAbilitySystemComponent())
+	if (AbilitySystemComponent)
 	{
-		PPASC->GetOwnedGameplayTags(TagContainer);
+		AbilitySystemComponent->GetOwnedGameplayTags(TagContainer);
 	}
 }
 
 bool APPCharacter::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
 {
-	if (const UPPAbilitySystemComponent* PPASC = GetPPAbilitySystemComponent())
+	if (AbilitySystemComponent)
 	{
-		return PPASC->HasMatchingGameplayTag(TagToCheck);
+		return AbilitySystemComponent->HasMatchingGameplayTag(TagToCheck);
 	}
 
 	return false;
@@ -53,9 +47,9 @@ bool APPCharacter::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
 
 bool APPCharacter::HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
 {
-	if (const UPPAbilitySystemComponent* PPASC = GetPPAbilitySystemComponent())
+	if (AbilitySystemComponent)
 	{
-		return PPASC->HasAllMatchingGameplayTags(TagContainer);
+		return AbilitySystemComponent->HasAllMatchingGameplayTags(TagContainer);
 	}
 
 	return false;
@@ -63,9 +57,9 @@ bool APPCharacter::HasAllMatchingGameplayTags(const FGameplayTagContainer& TagCo
 
 bool APPCharacter::HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
 {
-	if (const UPPAbilitySystemComponent* PPASC = GetPPAbilitySystemComponent())
+	if (AbilitySystemComponent)
 	{
-		return PPASC->HasAnyMatchingGameplayTags(TagContainer);
+		return AbilitySystemComponent->HasAnyMatchingGameplayTags(TagContainer);
 	}
 
 	return false;
@@ -74,7 +68,7 @@ bool APPCharacter::HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagCo
 void APPCharacter::InitializeGameplayTags()
 {
 	// Clear tags that may be lingering on the ability system from the previous pawn.
-	if (UPPAbilitySystemComponent* PPASC = GetPPAbilitySystemComponent())
+	if (AbilitySystemComponent)
 	{
 		const FPPGameplayTags& GameplayTags = FPPGameplayTags::Get();
 
@@ -82,7 +76,7 @@ void APPCharacter::InitializeGameplayTags()
 		{
 			if (TagMapping.Value.IsValid())
 			{
-				PPASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+				AbilitySystemComponent->SetLooseGameplayTagCount(TagMapping.Value, 0);
 			}
 		}
 
@@ -90,7 +84,7 @@ void APPCharacter::InitializeGameplayTags()
 		{
 			if (TagMapping.Value.IsValid())
 			{
-				PPASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+				AbilitySystemComponent->SetLooseGameplayTagCount(TagMapping.Value, 0);
 			}
 		}
 
@@ -141,6 +135,39 @@ void APPCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// AbilitySystemComponent
+	if (!AbilitySystemComponent)
+	{
+		AbilitySystemComponent = NewObject<UPPAbilitySystemComponent>(this, UPPAbilitySystemComponent::StaticClass());
+		AbilitySystemComponent->RegisterComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		UE_LOG(LogTemp, Log, TEXT("ASC Initialized for %s"), *GetName());
+	}
+
+	// PawnData
+	if (PawnData)
+	{
+		for (UPPAbilitySet* AbilitySet : PawnData->AbilitySets)
+		{
+			if (AbilitySet)
+			{
+				AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, nullptr, this);
+			}
+		}
+
+		if (PawnData->TagRelationshipMapping)
+		{
+			AbilitySystemComponent->SetTagRelationshipMapping(PawnData->TagRelationshipMapping);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Applied AbilitySets from PawnData for %s"), *GetName());
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No PawnData found for %s"), *GetName());
+	}
+	
 	UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
 	if (Inst != nullptr) { CharacterData = Inst->GetCharacterData(CharacterName); }
 	if (Inst != nullptr) { AbilityData = Inst->GetAbilityData(CharacterName); }

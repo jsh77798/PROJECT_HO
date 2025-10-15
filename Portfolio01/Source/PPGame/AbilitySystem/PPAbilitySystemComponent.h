@@ -72,7 +72,7 @@ public:
 	FGameplayAbilityTargetDataHandle MakeTargetDataFromHit(const FHitResult& Hit);
 
 	/** Sets the current tag relationship mapping, if null it will clear it out */
-	//void SetTagRelationshipMapping(UPPAbilityTagRelationshipMapping* NewMapping);
+	void SetTagRelationshipMapping(UPPAbilityTagRelationshipMapping* NewMapping);
 
 	/** Looks at ability tags and gathers additional required and blocking tags */
 	//void GetAdditionalActivationTagRequirements(const FGameplayTagContainer& AbilityTags, FGameplayTagContainer& OutActivationRequired, FGameplayTagContainer& OutActivationBlocked) const;

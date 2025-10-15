@@ -401,11 +401,11 @@ void UPPAbilitySystemComponent::ClearAbilityInput()
 //	}
 //}
 //
-//void UPPAbilitySystemComponent::SetTagRelationshipMapping(UPPAbilityTagRelationshipMapping* NewMapping)
-//{
-//	TagRelationshipMapping = NewMapping;
-//}
-//
+void UPPAbilitySystemComponent::SetTagRelationshipMapping(UPPAbilityTagRelationshipMapping* NewMapping)
+{
+	TagRelationshipMapping = NewMapping;
+}
+
 ////void UPPAbilitySystemComponent::ClientNotifyAbilityFailed_Implementation(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 ////{
 ////	HandleAbilityFailed(Ability, FailureReason);

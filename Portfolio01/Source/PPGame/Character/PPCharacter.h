@@ -16,9 +16,10 @@
 class AActor;
 class AController;
 class APPPlayerController;
+class UPPPawnData;
 class UAbilitySystemComponent;
-class UInputComponent;
 class UPPAbilitySystemComponent;
+class UInputComponent;
 class UHealthComponent;
 class UObject;
 struct FFrame;
@@ -27,12 +28,12 @@ struct FGameplayTagContainer;
 
 
 UCLASS()
-class PPGAME_API APPCharacter : public AModularCharacter, public IAbilitySystemInterface, public IGameplayCueInterface, public IGameplayTagAssetInterface
+class PPGAME_API APPCharacter : public AModularCharacter, public IGameplayCueInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
 	/** CharacterName */
-	UPROPERTY(Category = "Name", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = "PP|Name", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FName CharacterName = "NONE";
 
 	/** CharacterData */
@@ -41,30 +42,13 @@ class PPGAME_API APPCharacter : public AModularCharacter, public IAbilitySystemI
 	/** AbilityData */
 	struct FAbilityData* AbilityData;
 
-	UFUNCTION(BlueprintCallable, Category = "PP|Character")
-	UPPAbilitySystemComponent* GetPPAbilitySystemComponent() const;
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UFUNCTION(BlueprintCallable, Category = "PP|Ability")
+	UPPAbilitySystemComponent* GetPPAbilitySystemComponent() const { return AbilitySystemComponent; }
 	
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
 	virtual bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override;
 	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
-
-	/** CharacterData */
-	//UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//UDataTable* CharacterData;
-
-	/** AbilityData */
-	//UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//UDataTable* AbilityData;
-
-	/** MappingContext */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//class UInputMappingContext* DefaultMappingContext;
-
-	/** Move Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//class UInputAction* MoveAction;
 
 protected:
 	APPCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -75,7 +59,7 @@ protected:
 	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Character")
+	UFUNCTION(BlueprintCallable, Category = "PP|Controller")
 	APPPlayerController* GetPPPlayerController() const;
 
 	// Called when the game starts or when spawned
@@ -84,20 +68,16 @@ public:
 	virtual void Reset() override;
 
 	// Use Ability
-	UFUNCTION(BlueprintCallable, Category = "Ability")
+	UFUNCTION(BlueprintCallable, Category = "PP|Ability")
 	void UseAbility(FName AbilityName);
 
-protected:
-	
-
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PP|Health", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UHealthComponent> HealthComponent;
 
-protected:
-	/** Called for movement input */
-	//void Move(const FInputActionValue& Value);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PP|Ability", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPPAbilitySystemComponent> AbilitySystemComponent;
 
-	/** Called for looking input */
-	//void Look(const FInputActionValue& Value);
+	UPROPERTY(EditDefaultsOnly, Category = "PP|Pawn")
+	TObjectPtr<const UPPPawnData> PawnData;
 };
