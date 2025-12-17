@@ -177,6 +177,8 @@ protected:
 	void K2_OnPawnAvatarSet();
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability Animation")
+	TObjectPtr<UAnimMontage> AbilityMontage;
 
 	// Defines how this ability is meant to activate.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Activation")

@@ -61,3 +61,20 @@ void UPPAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	GroundDistance = GroundInfo.GroundDistance;
 }
 
+UCharacterMovementComponent* UPPAnimInstance::GetMovementComponent() const
+{
+	APawn* PawnOwner = TryGetPawnOwner();
+	if (!PawnOwner)
+	{
+		return nullptr;
+	}
+
+	ACharacter* Character = Cast<ACharacter>(PawnOwner);
+	if (!Character)
+	{
+		return nullptr;
+	}
+
+	return Character->GetCharacterMovement();
+}
+

@@ -270,7 +270,7 @@ void UPPAssetManager::PreBeginPIE(bool bStartSimulate)
 		SlowTask.MakeDialog(bShowCancelButton, bAllowInPIE);
 
 		const UPPGameData& LocalGameDataCommon = GetGameData();
-
+		
 		// Intentionally after GetGameData to avoid counting GameData time in this timer
 		SCOPE_LOG_TIME_IN_SECONDS(TEXT("PreBeginPIE asset preloading complete"), nullptr);
 
