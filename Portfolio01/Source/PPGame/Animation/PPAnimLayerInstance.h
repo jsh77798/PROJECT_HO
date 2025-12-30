@@ -21,19 +21,19 @@ class PPGAME_API UPPAnimLayerInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe), Category = "Default")
 	UPPAnimInstance* GetMainAnimThreadSafe() const;
 
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category = "Default")
 	bool ShouldEnableFootPlacement() const;
 
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category = "Default")
 	UCharacterMovementComponent* GetMovementComponent() const;
 
-	UFUNCTION(BlueprintCallable, Category = "BlueprintThreadSafeUpdateFunctions")
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe), Category = "BlueprintThreadSafeUpdateFunctions")
 	void UpdateBlendWeightData(float DeltaTime);
 
-	UFUNCTION(BlueprintCallable, Category = "BlueprintThreadSafeUpdateFunctions")
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe), Category = "BlueprintThreadSafeUpdateFunctions")
 	void UpdateSkelControlData();
 
 public:

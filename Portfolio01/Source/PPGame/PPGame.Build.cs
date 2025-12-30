@@ -33,7 +33,7 @@ public class PPGame : ModuleRules
                 "GameFeatures",
                 "Niagara",
                 "PhysicsCore",
-                "TraceLog",
+                "TraceLog"
             }
         );
 
