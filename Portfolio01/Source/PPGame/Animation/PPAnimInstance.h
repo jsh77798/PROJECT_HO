@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "KismetAnimationLibrary.h"
 #include "GameplayEffectTypes.h"
 #include "PPAnimTypes.h"
 

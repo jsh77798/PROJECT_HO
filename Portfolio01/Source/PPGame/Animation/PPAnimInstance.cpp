@@ -223,22 +223,66 @@ void UPPAnimInstance::UpdateVelocityData()
 
 void UPPAnimInstance::UpdateAccelerationData()
 {
+	FVector WorldAcceleration2D = GetMovementComponent()->GetCurrentAcceleration();
+	WorldAcceleration2D.Z *= 0.0f;
+
+	LocalAcceleration2D = UKismetMathLibrary::LessLess_VectorRotator(WorldAcceleration2D, WorldRotation);
+
+	HasAcceleration = !UKismetMathLibrary::NearlyEqual_FloatFloat(UKismetMathLibrary::VSizeXYSquared(LocalAcceleration2D), 0.0, 0.000001);
+
+	PivotDirection2D = UKismetMathLibrary::Normal(UKismetMathLibrary::VLerp(PivotDirection2D, UKismetMathLibrary::Normal(WorldAcceleration2D, 0.0001f), 0.5f), 0.0001f);
+
+	CardinalDirectionFromAcceleration = GetOppositeCardinalDirection(SelectCardinalDirectionfromAngle(UKismetAnimationLibrary::CalculateDirection(PivotDirection2D, WorldRotation), CardinalDirectionDeadZone, AnimEnum_CardinalDirection::Forward, false));
 }
 
 void UPPAnimInstance::UpdateCharacterStateData(float DeltaTime)
 {
+	{
+		IsOnGround = GetMovementComponent()->IsMovingOnGround();
+	}
+
+	{
+		bool WasCrouchingLastUpdate = IsCrouching;
+
+		IsCrouching = GetMovementComponent()->IsCrouching();
+
+		CrouchStateChange = (IsCrouching != WasCrouchingLastUpdate);
+	}
+
+	{
+		ADSStateChanged = (GameplayTag_IsADS != WasADSLastUpdate);
+
+		WasADSLastUpdate = GameplayTag_IsADS;
+	}
+
+	{
+		if (GameplayTag_IsFiring) 
+		{
+			TimeSinceFiredWeapon = 0.0f;
+		}
+		else
+		{
+			TimeSinceFiredWeapon += DeltaTime;
+		}
+	}
 }
 
 void UPPAnimInstance::UpdateBlendWeightData(float DeltaTime)
 {
+	UpperbodyDynamicAdditiveWeight = UKismetMathLibrary::SelectFloat(1.0, UKismetMathLibrary::FInterpTo(UpperbodyDynamicAdditiveWeight, 0.0, DeltaTime, 6.0), IsAnyMontagePlaying() && IsOnGround);
 }
 
 void UPPAnimInstance::UpdateAimingData()
 {
+	AimPitch = UKismetMathLibrary::NormalizeAxis(TryGetPawnOwner()->GetBaseAimRotation().Pitch);
 }
 
 void UPPAnimInstance::UpdateWallDetectionHeuristic()
 {
+	IsRunningIntoWall =
+	UKismetMathLibrary::VSizeXY(LocalAcceleration2D) > 0.1f &&
+	UKismetMathLibrary::VSizeXY(LocalVelocity2D) < 200.0f &&
+	UKismetMathLibrary::InRange_FloatFloat(UKismetMathLibrary::Dot_VectorVector(UKismetMathLibrary::Normal(LocalAcceleration2D), UKismetMathLibrary::Normal(LocalVelocity2D)), -0.6f, 0.6f, true, true);
 }
 
 
