@@ -7,6 +7,10 @@
 #include "PPAnimInstance.h"
 #include "Character/PPCharacter.h"
 #include "Character/PPCharacterMovementComponent.h"
+#include "AnimGraphRuntime/Public/AnimationStateMachineLibrary.h"
+#include "AnimGraphRuntime/Public/SequencePlayerLibrary.h"
+//#include "Animation/AnimNode_SequencePlayer.h"
+#include "Animation/AnimExecutionContext.h"
 
 UPPAnimInstance* UPPAnimLayerInstance::GetMainAnimThreadSafe() const
 {
@@ -53,6 +57,32 @@ UCharacterMovementComponent* UPPAnimLayerInstance::GetMovementComponent() const
 
 void UPPAnimLayerInstance::UpdateBlendWeightData(float DeltaTime)
 {
+	UPPAnimInstance* AnimInstance = GetMainAnimThreadSafe();
+	if (!AnimInstance)
+	{
+		return;
+	}
+
+	if ((!RaiseWeaponAfterFiringWhenCrouched && AnimInstance->IsCrouching) || ((!AnimInstance->IsCrouching && AnimInstance->GameplayTag_IsADS) && AnimInstance->IsOnGround))
+	{
+		HipFireUpperBodyOverrideWeight = 0.f;
+		AimOffsetBlendWeight = 1.f;
+	}
+	else 
+	{
+		if ((AnimInstance->TimeSinceFiredWeapon < RaiseWeaponAfterFiringDuration) || (AnimInstance->GameplayTag_IsADS && (AnimInstance->IsCrouching || !AnimInstance->IsOnGround)) || (GetCurveValue("applyHipfireOverridePose") > 0.f))
+		{
+			HipFireUpperBodyOverrideWeight = 1.0f;
+			AimOffsetBlendWeight = 1.0f;
+		}
+		else 
+		{
+			HipFireUpperBodyOverrideWeight = UKismetMathLibrary::FInterpTo(HipFireUpperBodyOverrideWeight, 0.0f, DeltaTime, 1.0f);
+			double Target = UKismetMathLibrary::SelectFloat(HipFireUpperBodyOverrideWeight, 1.0f, FMath::Abs(AnimInstance->RootYawOffset) < 10.0f && AnimInstance->HasAcceleration);
+
+			AimOffsetBlendWeight = UKismetMathLibrary::FInterpTo(AimOffsetBlendWeight, Target, DeltaTime, 10.0f);
+		}
+	}
 }
 
 void UPPAnimLayerInstance::UpdateSkelControlData()

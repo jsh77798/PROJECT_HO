@@ -44,6 +44,26 @@ void UPPAnimInstance::NativeInitializeAnimation()
 			InitializeWithAbilitySystem(ASC);
 		}
 	}
+
+	// Pawn Ä³½Ì
+	APawn* Pawn = TryGetPawnOwner();
+	if (!IsValid(Pawn))
+	{
+		CachedPawn.Reset();
+		CachedCharacter.Reset();
+		return;
+	}
+	CachedPawn = Pawn;
+
+	// Character Ä³½Ì
+	ACharacter* Character = Cast<ACharacter>(Pawn);
+	if (!IsValid(Character))
+	{
+		CachedCharacter.Reset();
+		return;
+	}
+	CachedCharacter = Character;
+
 }
 
 void UPPAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -72,13 +92,13 @@ bool UPPAnimInstance::ShouldEnableControlRig()
 
 UCharacterMovementComponent* UPPAnimInstance::GetMovementComponent()
 {
-	APawn* PawnOwner = TryGetPawnOwner();
+	APawn* PawnOwner = CachedPawn.Get();
 	if (!PawnOwner)
 	{
 		return nullptr;
 	}
 
-	ACharacter* Character = Cast<ACharacter>(PawnOwner);
+	ACharacter* Character = CachedCharacter.Get();
 	if (!Character)
 	{
 		return nullptr;
@@ -165,7 +185,15 @@ bool UPPAnimInstance::IsMovingPerpendicularToInitialPivot()
 
 void UPPAnimInstance::UpdateLocationData(float DeltaTime)
 {
-	FVector ActorLocation = GetOwningActor()->GetActorLocation();
+	AActor* OwningActor = GetOwningActor();
+	if (!IsValid(OwningActor))
+	{
+		DisplacementSinceLastUpdate = 0.f;
+		DisplacementSpeed = 0.f;
+		return;
+	}
+
+	FVector ActorLocation = OwningActor->GetActorLocation();
 
 	DisplacementSinceLastUpdate = UKismetMathLibrary::VSizeXY(ActorLocation - WorldLocation);
 
@@ -182,11 +210,21 @@ void UPPAnimInstance::UpdateLocationData(float DeltaTime)
 
 void UPPAnimInstance::UpdateRotationData()
 {
-	FRotator ActorRotation = GetOwningActor()->GetActorRotation();
+	AActor* OwningActor = GetOwningActor();
+	UWorld* World = GetWorld();
+	if (!IsValid(OwningActor) || !IsValid(World))
+	{
+		YawDeltaSinceLastUpdate = 0.f;
+		YawDeltaSpeed = 0.f;
+		AdditiveLeanAngle = 0.f;
+		return;
+	}
+
+	FRotator ActorRotation = OwningActor->GetActorRotation();
 
 	YawDeltaSinceLastUpdate = ActorRotation.Yaw - WorldRotation.Yaw;
 
-	YawDeltaSpeed = UKismetMathLibrary::SafeDivide(YawDeltaSinceLastUpdate, GetWorld()->GetDeltaSeconds());
+	YawDeltaSpeed = UKismetMathLibrary::SafeDivide(YawDeltaSinceLastUpdate, World->GetDeltaSeconds());
 
 	WorldRotation = ActorRotation;
 
@@ -203,9 +241,18 @@ void UPPAnimInstance::UpdateVelocityData()
 {
 	bool WasMovingLastUpdate = !UKismetMathLibrary::Vector_IsZero(LocalVelocity2D);
 
-	WorldVelocity = TryGetPawnOwner()->GetVelocity();
+	APawn* PawnOwner = CachedPawn.Get();
+	if (!IsValid(PawnOwner))
+	{
+		WorldVelocity = FVector::ZeroVector;
+		LocalVelocity2D = FVector::ZeroVector;
+		HasVelocity = false;
+		return;
+	}
 
-	WorldVelocity.Z *= 0.f;
+	WorldVelocity = PawnOwner->GetVelocity();
+	WorldVelocity.Z = 0.f;
+
 	FVector WorldVelocity2D = WorldVelocity;
 
 	LocalVelocity2D = UKismetMathLibrary::LessLess_VectorRotator(WorldVelocity2D, WorldRotation);
@@ -223,7 +270,15 @@ void UPPAnimInstance::UpdateVelocityData()
 
 void UPPAnimInstance::UpdateAccelerationData()
 {
-	FVector WorldAcceleration2D = GetMovementComponent()->GetCurrentAcceleration();
+	UCharacterMovementComponent* MoveComp = GetMovementComponent();
+	if (!IsValid(MoveComp))
+	{
+		LocalAcceleration2D = FVector::ZeroVector;
+		HasAcceleration = false;
+		return;
+	}
+
+	FVector WorldAcceleration2D = MoveComp->GetCurrentAcceleration();
 	WorldAcceleration2D.Z *= 0.0f;
 
 	LocalAcceleration2D = UKismetMathLibrary::LessLess_VectorRotator(WorldAcceleration2D, WorldRotation);
@@ -237,24 +292,14 @@ void UPPAnimInstance::UpdateAccelerationData()
 
 void UPPAnimInstance::UpdateCharacterStateData(float DeltaTime)
 {
-	{
-		IsOnGround = GetMovementComponent()->IsMovingOnGround();
-	}
-
-	{
-		bool WasCrouchingLastUpdate = IsCrouching;
-
-		IsCrouching = GetMovementComponent()->IsCrouching();
-
-		CrouchStateChange = (IsCrouching != WasCrouchingLastUpdate);
-	}
-
+	// ADS state
 	{
 		ADSStateChanged = (GameplayTag_IsADS != WasADSLastUpdate);
 
 		WasADSLastUpdate = GameplayTag_IsADS;
 	}
 
+	// Weapon fired state
 	{
 		if (GameplayTag_IsFiring) 
 		{
@@ -263,6 +308,31 @@ void UPPAnimInstance::UpdateCharacterStateData(float DeltaTime)
 		else
 		{
 			TimeSinceFiredWeapon += DeltaTime;
+		}
+	}
+
+	{
+		UCharacterMovementComponent* MoveComp = GetMovementComponent();
+		if (!IsValid(MoveComp))
+		{
+			IsOnGround = false;
+			IsCrouching = false;
+			CrouchStateChange = false;
+			return;
+		}
+
+		// On ground state
+		{
+			IsOnGround = MoveComp->IsMovingOnGround();
+		}
+
+		// Crouch state
+		{
+			bool WasCrouchingLastUpdate = IsCrouching;
+
+			IsCrouching = MoveComp->IsCrouching();
+
+			CrouchStateChange = (IsCrouching != WasCrouchingLastUpdate);
 		}
 	}
 }
@@ -274,7 +344,16 @@ void UPPAnimInstance::UpdateBlendWeightData(float DeltaTime)
 
 void UPPAnimInstance::UpdateAimingData()
 {
-	AimPitch = UKismetMathLibrary::NormalizeAxis(TryGetPawnOwner()->GetBaseAimRotation().Pitch);
+	APawn* PawnOwner = CachedPawn.Get();
+	if (!PawnOwner)
+	{
+		AimPitch = 0.f;
+		return;
+	}
+
+	AimPitch = UKismetMathLibrary::NormalizeAxis(
+		PawnOwner->GetBaseAimRotation().Pitch
+	);
 }
 
 void UPPAnimInstance::UpdateWallDetectionHeuristic()

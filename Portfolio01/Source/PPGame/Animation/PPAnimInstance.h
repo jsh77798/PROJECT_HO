@@ -46,6 +46,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Character State Data")
 	float GroundDistance = -1.0f;
 
+	UPROPERTY(Transient)
+	TWeakObjectPtr<APawn> CachedPawn;
+
+	UPROPERTY(Transient)
+	TWeakObjectPtr<ACharacter> CachedCharacter;
+
 	UFUNCTION(BlueprintPure, Category = "Default")
 	bool ShouldEnableControlRig();
 

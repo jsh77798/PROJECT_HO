@@ -20,7 +20,7 @@ class PPGAME_API UPPAnimLayerInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
-public:
+protected:
 	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe), Category = "Default")
 	UPPAnimInstance* GetMainAnimThreadSafe() const;
 
@@ -35,8 +35,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe), Category = "BlueprintThreadSafeUpdateFunctions")
 	void UpdateSkelControlData();
-
+	
 public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Idle")
+	UAnimSequence* Idle = nullptr;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Idle")
 	UAnimSequence* Idle_ADS = nullptr;
 
