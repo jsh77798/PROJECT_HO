@@ -59,7 +59,7 @@ public:
 	UAnimSequence* Crouch_Idle_Exit = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Starts")
-	FAnimStruct_CardinalDirections Walk_Start_Cardinals;
+	FAnimStruct_CardinalDirections Jog_Start_Cardinals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Starts")
 	FAnimStruct_CardinalDirections ADS_Start_Cardinals;
@@ -68,7 +68,7 @@ public:
 	FAnimStruct_CardinalDirections Crouch_Start_Cardinals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Stops")
-	FAnimStruct_CardinalDirections Walk_Stop_Cardinals;
+	FAnimStruct_CardinalDirections Jog_Stop_Cardinals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Stops")
 	FAnimStruct_CardinalDirections ADS_Stop_Cardinals;
@@ -77,7 +77,7 @@ public:
 	FAnimStruct_CardinalDirections Crouch_Stop_Cardinals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Pivots")
-	FAnimStruct_CardinalDirections Walk_Pivot_Cardinals;
+	FAnimStruct_CardinalDirections Jog_Pivot_Cardinals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSet-Pivots")
 	FAnimStruct_CardinalDirections ADS_Pivot_Cardinals;
@@ -152,7 +152,7 @@ public:
 	float TimeUntilNextIdleBreak = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "IdleBreaks")
-	int64 CurrentIdleBreakIndex = 0;
+	int32 CurrentIdleBreakIndex = 0;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "IdleBreaks")
 	float IdleBreakDelayTime = 0.0f;
