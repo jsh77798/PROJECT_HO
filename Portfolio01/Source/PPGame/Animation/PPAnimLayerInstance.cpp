@@ -5,6 +5,8 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "PPAnimInstance.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
 #include "Character/PPCharacter.h"
 #include "Character/PPCharacterMovementComponent.h"
 #include "AnimGraphRuntime/Public/AnimationStateMachineLibrary.h"
@@ -57,20 +59,27 @@ UCharacterMovementComponent* UPPAnimLayerInstance::GetMovementComponent() const
 
 void UPPAnimLayerInstance::UpdateBlendWeightData(float DeltaTime)
 {
+	AActor* OwningActor = GetOwningActor();
+
 	UPPAnimInstance* AnimInstance = GetMainAnimThreadSafe();
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor);
+
+	bool bIsADS = (ASC && ASC->HasMatchingGameplayTag(AnimInstance->ADS_Tag));
+
 	if (!AnimInstance)
 	{
 		return;
 	}
 
-	if ((!RaiseWeaponAfterFiringWhenCrouched && AnimInstance->IsCrouching) || ((!AnimInstance->IsCrouching && AnimInstance->GameplayTag_IsADS) && AnimInstance->IsOnGround))
+	if ((!RaiseWeaponAfterFiringWhenCrouched && AnimInstance->IsCrouching) || ((!AnimInstance->IsCrouching && bIsADS) && AnimInstance->IsOnGround))
 	{
 		HipFireUpperBodyOverrideWeight = 0.f;
 		AimOffsetBlendWeight = 1.f;
 	}
 	else 
 	{
-		if ((AnimInstance->TimeSinceFiredWeapon < RaiseWeaponAfterFiringDuration) || (AnimInstance->GameplayTag_IsADS && (AnimInstance->IsCrouching || !AnimInstance->IsOnGround)) || (GetCurveValue("applyHipfireOverridePose") > 0.f))
+		if ((AnimInstance->TimeSinceFiredWeapon < RaiseWeaponAfterFiringDuration) || (bIsADS && (AnimInstance->IsCrouching || !AnimInstance->IsOnGround)) || (GetCurveValue("applyHipfireOverridePose") > 0.f))
 		{
 			HipFireUpperBodyOverrideWeight = 1.0f;
 			AimOffsetBlendWeight = 1.0f;

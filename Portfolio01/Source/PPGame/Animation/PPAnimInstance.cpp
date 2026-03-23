@@ -211,7 +211,9 @@ void UPPAnimInstance::UpdateLocationData(float DeltaTime)
 void UPPAnimInstance::UpdateRotationData()
 {
 	AActor* OwningActor = GetOwningActor();
+
 	UWorld* World = GetWorld();
+
 	if (!IsValid(OwningActor) || !IsValid(World))
 	{
 		YawDeltaSinceLastUpdate = 0.f;
@@ -219,6 +221,10 @@ void UPPAnimInstance::UpdateRotationData()
 		AdditiveLeanAngle = 0.f;
 		return;
 	}
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor);
+
+	bool bIsADS = (ASC && ASC->HasMatchingGameplayTag(ADS_Tag));
 
 	FRotator ActorRotation = OwningActor->GetActorRotation();
 
@@ -228,7 +234,7 @@ void UPPAnimInstance::UpdateRotationData()
 
 	WorldRotation = ActorRotation;
 
-	AdditiveLeanAngle = YawDeltaSpeed * UKismetMathLibrary::SelectFloat(0.025f, 0.0375f, IsCrouching || GameplayTag_IsADS);
+	AdditiveLeanAngle = YawDeltaSpeed * UKismetMathLibrary::SelectFloat(0.025f, 0.0375f, IsCrouching || bIsADS);
 
 	if (IsFirstUpdate)
 	{
@@ -292,11 +298,17 @@ void UPPAnimInstance::UpdateAccelerationData()
 
 void UPPAnimInstance::UpdateCharacterStateData(float DeltaTime)
 {
+	AActor* OwningActor = GetOwningActor();
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor);
+
+	bool bIsADS = (ASC && ASC->HasMatchingGameplayTag(ADS_Tag));
+
 	// ADS state
 	{
-		ADSStateChanged = (GameplayTag_IsADS != WasADSLastUpdate);
+		ADSStateChanged = (bIsADS != WasADSLastUpdate);
 
-		WasADSLastUpdate = GameplayTag_IsADS;
+		WasADSLastUpdate = bIsADS;
 	}
 
 	// Weapon fired state

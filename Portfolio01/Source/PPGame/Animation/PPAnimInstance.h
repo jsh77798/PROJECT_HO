@@ -176,10 +176,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterStateData")
 	bool IsRunningIntoWall = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameplayTagBindings")
-	bool GameplayTag_IsADS = false;
+	FGameplayTag ADS_Tag = FGameplayTag::RequestGameplayTag(FName("Event.Movement.ADS"));
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameplayTagBindings")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTagBindings")
+	//bool GameplayTag_IsADS = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTagBindings")
 	bool GameplayTag_IsFiring = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameplayTagBindings")
