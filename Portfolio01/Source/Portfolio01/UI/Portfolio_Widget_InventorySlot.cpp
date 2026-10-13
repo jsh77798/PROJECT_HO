@@ -63,6 +63,15 @@ void UPortfolio_Widget_InventorySlot::SlotDataCheck()
 		}
 	}
 
+	if (nullptr == ItemData->Data)
+	{
+		ItemCountValue = 0;
+
+		ItemBackVisibility = ESlateVisibility::Visible;
+		ItemIconVisibility = ESlateVisibility::Hidden;
+		ItemCountVisibility = ESlateVisibility::Hidden;
+		return;
+	}
 }
 
 void UPortfolio_Widget_InventorySlot::DragSetting(UPortfolio_Widget_InventorySlot* _OtherDragSlot)
@@ -83,47 +92,60 @@ void UPortfolio_Widget_InventorySlot::DragSetting(UPortfolio_Widget_InventorySlo
 
 void UPortfolio_Widget_InventorySlot::MoveSetting(UPortfolio_Widget_InventorySlot* _OtherDragSlot)
 {
-	if (_OtherDragSlot == this)
+	//if (_OtherDragSlot == this)
+	//{
+	//	return;
+	//}
+	//
+	//if (ItemTypeValue != ItemType::NONE && _OtherDragSlot->ItemData->Data->Type != ItemTypeValue)
+	//{
+	//	return;
+	//}
+	//
+	//UInventoryItemData* SwapItemData = _OtherDragSlot->ItemData;
+	//_OtherDragSlot->ItemData = ItemData;
+	//ItemData = SwapItemData;
+	//
+	//if (true == ItemChangeFunction.IsBound())
+	//{
+	//	ItemChangeFunction.Broadcast();
+	//}
+	//
+	//SlotDataCheck();
+	//_OtherDragSlot->SlotDataCheck();
+
+	if (!IsValid(_OtherDragSlot) ||
+		_OtherDragSlot == this ||
+		!IsValid(ItemData) ||
+		!IsValid(_OtherDragSlot->ItemData))
 	{
 		return;
 	}
 
-	// UInvenItemSlot* _OtherDragSlot 시작슬롯
-
-	// 이걸 호출하는 쪽은 이제 도착 슬롯
-
-	if (ItemTypeValue != ItemType::NONE && _OtherDragSlot->ItemData->Data->Type != ItemTypeValue)
+	// 목적지 슬롯의 아이템 종류 제한
+	if (ItemTypeValue != ItemType::NONE &&
+		_OtherDragSlot->ItemData->Data &&
+		_OtherDragSlot->ItemData->Data->Type != ItemTypeValue)
 	{
 		return;
 	}
 
-	//const FItemData* SwapItemData = _OtherDragSlot->ItemData->Data;
-	//_OtherDragSlot->ItemData->Data = ItemData->Data;
-	//ItemData->Data = SwapItemData;
-
-	UInventoryItemData* SwapItemData = _OtherDragSlot->ItemData;
-	_OtherDragSlot->ItemData = ItemData;
-	ItemData = SwapItemData;
-
-	// 첫번째 함수포인터.
-	// 두번째 다형성
-	// StatusChracter
-
-	// 여기 이부분에서 뭔가를 하고 싶어.
-	// 그건 내가 알려줘야 하는데.
-	// 함수포인터.
-	// 나는 그냥 UI다. 나는 플레이어나 몬스터나 이런것들을 알고 싶지 않다.
-
-	// 함수가 매핑 되었다면
-	if (true == ItemChangeFunction.IsBound())
+	// 교환되어 돌아갈 아이템도 원래 슬롯에 들어갈 수 있어야 함
+	if (_OtherDragSlot->ItemTypeValue != ItemType::NONE &&
+		ItemData->Data &&
+		ItemData->Data->Type != _OtherDragSlot->ItemTypeValue)
 	{
-		// 그 함수를 호출해라.
-		ItemChangeFunction.Broadcast();
+		return;
 	}
 
-	// 나는 다 받아서 세팅하고
+	Swap(ItemData->Data, _OtherDragSlot->ItemData->Data);
+	Swap(ItemData->Count, _OtherDragSlot->ItemData->Count);
+
 	SlotDataCheck();
 	_OtherDragSlot->SlotDataCheck();
+
+	ItemChangeFunction.Broadcast();
+	_OtherDragSlot->ItemChangeFunction.Broadcast();
 }
 
 

@@ -27,6 +27,10 @@ void APortfolio_AIMonster::BeginPlay()
 		SetAllAnimation(CurMonsterData->MapAnimation);
 		SetAniState(AIState::DEATH);
 
+		SetHP(CurMonsterData->HP);
+		SetStunHP(CurMonsterData->StunHP);
+		SetATT(CurMonsterData->ATT);
+		SetStunATT(CurMonsterData->StunATT);
 	}
 
 	Super::BeginPlay();

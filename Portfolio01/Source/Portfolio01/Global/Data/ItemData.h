@@ -6,6 +6,7 @@
 #include <Global/Portfolio_GlobalEnums.h>
 #include "Engine/Texture.h"
 #include "Engine/StaticMesh.h"
+#include "Sound/SoundBase.h"
 #include "ItemData.generated.h"
 
 /**
@@ -44,4 +45,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
 		int VALUE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		USoundBase* PickupSound = nullptr;
 };

@@ -20,13 +20,35 @@ UBTTask_RETURN::UBTTask_RETURN()
 
 EBTNodeResult::Type UBTTask_RETURN::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	auto* Character = GetGlobalCharacter(OwnerComp);
+	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
+
+	if (!IsValid(Character) || !IsValid(Blackboard))
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	// 사망 상태를 RETURN 애니메이션으로 덮어쓰지 않음
+	if (Character->GetHP() <= 0)
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
+
+		Blackboard->SetValueAsEnum(
+			TEXT("AIState"),
+			static_cast<uint8>(AIState::DEATH)
+		);
+
+		ResetStateTime(OwnerComp);
+		return EBTNodeResult::Failed;
+	}
+
 	GetGlobalCharacter(OwnerComp)->SetAniState(AIState::RETURN);
 
 	UCharacterMovementComponent* MoveCom = Cast<UCharacterMovementComponent>(GetGlobalCharacter(OwnerComp)->GetMovementComponent());
 
 	if (nullptr != MoveCom)
 	{
-		MoveCom->MaxWalkSpeed = 55.0f;
+		MoveCom->MaxWalkSpeed = GetGlobalCharacter(OwnerComp)->GetSpeed() * 0.8f; // 80%
 	}
 
 	FVector OriginPos = GetBlackboardComponent(OwnerComp)->GetValueAsVector(TEXT("OriginPos"));
@@ -41,45 +63,52 @@ EBTNodeResult::Type UBTTask_RETURN::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 void UBTTask_RETURN::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DelataSeconds)
 {
 
-	if (true == IsDeathCheck(OwnerComp))
-	{
-		SetStateChange(OwnerComp, AIState::DEATH);
-		return;
-	}
+	auto* Character = GetGlobalCharacter(OwnerComp);
+	UBlackboardComponent* Blackboard =
+		OwnerComp.GetBlackboardComponent();
 
-	if (true == IsStunCheck(OwnerComp))
+	if (!IsValid(Character) || !IsValid(Blackboard))
 	{
-		SetStateChange(OwnerComp, AIState::STUN);
-		return;
-	}
-
-	if (true == IsAttackCheck(OwnerComp))
-	{
-		SetStateChange(OwnerComp, AIState::MOVE);
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
 
 	Super::TickTask(OwnerComp, NodeMemory, DelataSeconds);
 
-	UObject* NavObject = GetBlackboardComponent(OwnerComp)->GetValueAsObject(TEXT("NavPath"));
-	UNavigationPath* NavPath = Cast<UNavigationPath>(NavObject);
-
-	if (nullptr == NavPath)
+	// 내부에서 이미 상태 변경 및 작업 종료를 수행함
+	if (IsDeathCheck(OwnerComp))
 	{
+		return;
+	}
+
+	if (IsStunCheck(OwnerComp))
+	{
+		return;
+	}
+
+	UNavigationPath* NavPath = Cast<UNavigationPath>(
+		Blackboard->GetValueAsObject(TEXT("NavPath"))
+	);
+
+	if (!IsValid(NavPath) ||
+		!NavPath->IsValid() ||
+		NavPath->PathPoints.Num() < 2)
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
 		SetStateChange(OwnerComp, AIState::IDLE);
 		return;
 	}
 
-	if (nullptr != NavPath && 1 >= NavPath->PathPoints.Num())
+	int CurrentIndex =
+		Blackboard->GetValueAsInt(TEXT("CurrentIndex"));
+
+	if (!NavPath->PathPoints.IsValidIndex(CurrentIndex))
 	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
 		SetStateChange(OwnerComp, AIState::IDLE);
 		return;
 	}
 
-	int CurrentIndex = GetBlackboardComponent(OwnerComp)->GetValueAsInt(TEXT("CurrentIndex"));
-
-	// 문제가 될수 있다.
-	// 1번 찾은 경로를 완전히 끝까지 돌아가는것이 중요해졌다.
 	FVector TargetPos = NavPath->PathPoints[CurrentIndex];
 	FVector ThisPos = GetGlobalCharacter(OwnerComp)->GetActorLocation();
 
@@ -112,27 +141,24 @@ void UBTTask_RETURN::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 	}
 
 	{
-		ThisPos.Z = 0.0f;
-		TargetPos.Z = 0.0f;
+		const FVector Dir = TargetPos - ThisPos;
 
-		FVector Dir = TargetPos - ThisPos;
-
-		GetGlobalCharacter(OwnerComp)->AddMovementInput(Dir);
-
-		if (10.0f >= Dir.Size())
+		if (Dir.SizeSquared() <= FMath::Square(10.0f))
 		{
 			++CurrentIndex;
 
-			if (NavPath->PathPoints.Num() <= CurrentIndex)
+			if (CurrentIndex >= NavPath->PathPoints.Num())
 			{
-				// 최종목적지까지 도달했다.
+				Character->GetCharacterMovement()->StopMovementImmediately();
 				SetStateChange(OwnerComp, AIState::IDLE);
 				return;
 			}
 
-			GetBlackboardComponent(OwnerComp)->SetValueAsInt(TEXT("CurrentIndex"), CurrentIndex);
+			Blackboard->SetValueAsInt(TEXT("CurrentIndex"), CurrentIndex);
 			return;
 		}
+
+		Character->AddMovementInput(Dir.GetSafeNormal());
 	}
 
 }

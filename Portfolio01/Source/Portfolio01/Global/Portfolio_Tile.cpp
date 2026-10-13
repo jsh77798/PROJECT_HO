@@ -11,6 +11,14 @@
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
+#include "Engine/World.h"
+#include "Engine/DamageEvents.h"
+#include "CollisionQueryParams.h"
+#include "Particles/ParticleSystem.h"
+#include "Sound/SoundBase.h"
+#include "Sound/SoundAttenuation.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 
 
 // Sets default values
@@ -37,6 +45,63 @@ APortfolio_Tile::APortfolio_Tile()
 	*/
 }
 
+
+void APortfolio_Tile::PlayEnemyHitEffect(const FHitResult& Hit)
+{
+	APortfolio_GlobalCharacter* HitCharacter =
+		Cast<APortfolio_GlobalCharacter>(Hit.GetActor());
+
+	if (!IsValid(HitCharacter) ||
+		HitCharacter == GetOwner() ||
+		HitCharacter == GetInstigator())
+	{
+		return;
+	}
+
+	const TWeakObjectPtr<AActor> ActorKey(HitCharacter);
+
+	// 샷건 산탄 여러 개가 같은 적에게 맞아도 한 번만 재생
+	if (HitEffectActors.Contains(ActorKey))
+	{
+		return;
+	}
+
+	HitEffectActors.Add(ActorKey);
+
+	// 표면에 묻히는 것을 줄이기 위해 바깥으로 조금 이동
+	const FVector EffectLocation =
+		Hit.ImpactPoint + Hit.ImpactNormal * 2.0f;
+
+	const FRotator EffectRotation =
+		Hit.ImpactNormal.Rotation();
+
+	if (IsValid(BloodEffect))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			BloodEffect,
+			EffectLocation,
+			EffectRotation,
+			FVector(BloodEffectScale),
+			true,   // 재생 완료 후 자동 제거
+			true    // 생성 즉시 재생
+		);
+	}
+
+	if (IsValid(HitSound))
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			HitSound,
+			Hit.ImpactPoint,
+			FRotator::ZeroRotator,
+			1.0f,   // 음량
+			1.0f,   // 피치
+			0.0f,   // 재생 시작 시간
+			HitSoundAttenuation
+		);
+	}
+}
 
 // Called when the game starts or when spawned
 void APortfolio_Tile::BeginPlay()
@@ -250,7 +315,7 @@ void APortfolio_Tile::AimingAttack(FVector CameraLoc, FVector CameraForward)
 
 	if (Result == true)
 	{
-		float Damage = 100;
+		float Damage = ShotgunPelletDamage;
 		FVector ImpactPoint = HitResult.ImpactPoint;
 		HitResult.GetActor();
 		// HitResult에서 필요한 값들을 사용하면 됨.
@@ -268,6 +333,8 @@ void APortfolio_Tile::AimingAttack(FVector CameraLoc, FVector CameraForward)
 
 			// Apply damage to the hit actor (assuming it's an ACharacter).
 			APortfolio_GlobalCharacter* HitCharacter = Cast<APortfolio_GlobalCharacter>(HitResult.GetActor());
+
+			PlayEnemyHitEffect(HitResult);
 
 			if (BoneName == "Head") // 헤드샷( +75% )
 			{
@@ -336,9 +403,174 @@ void APortfolio_Tile::AimingAttack(FVector CameraLoc, FVector CameraForward)
 	
 }
 
+void APortfolio_Tile::PistolAttack(FVector CameraLoc, FVector CameraForward)
+{
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+
+	const FVector CameraDirection =
+		CameraForward.GetSafeNormal();
+
+	if (CameraDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	// 자신과 발사한 캐릭터는 명중 대상에서 제외
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = false;
+	QueryParams.AddIgnoredActor(this);
+
+	if (IsValid(GetOwner()))
+	{
+		QueryParams.AddIgnoredActor(GetOwner());
+	}
+
+	if (IsValid(GetInstigator()))
+	{
+		QueryParams.AddIgnoredActor(GetInstigator());
+	}
+
+	// 1. 카메라 트레이스: 화면 중앙이 가리키는 위치 계산
+	// 여기서는 피해를 주지 않음
+	const FVector CameraEnd =
+		CameraLoc + CameraDirection * PistolTraceDistance;
+
+	FHitResult CameraHit;
+
+	const bool bCameraHit = World->LineTraceSingleByChannel(
+		CameraHit,
+		CameraLoc,
+		CameraEnd,
+		ECC_Visibility,
+		QueryParams
+	);
+
+	FVector AimPoint =
+		bCameraHit ? CameraHit.ImpactPoint : CameraEnd;
+
+	// 이 액터는 캐릭터 코드에서 총구 위치에 생성됨
+	const FVector MuzzleLocation = GetActorLocation();
+
+	// 카메라 바로 앞 장애물이 총구 뒤에 있는 경우,
+	// 총을 뒤로 발사하지 않도록 전방으로 판정
+	if (FVector::DotProduct(
+		AimPoint - MuzzleLocation, CameraDirection) <= 0.0f)
+	{
+		AimPoint =
+			MuzzleLocation + CameraDirection * PistolTraceDistance;
+	}
+
+	const FVector ShotDirection =
+		(AimPoint - MuzzleLocation).GetSafeNormal();
+
+	if (ShotDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	// 시각적인 발사체의 이동 방향도 조준 방향으로 맞춤
+	SetActorRotation(ShotDirection.Rotation());
+
+	// 표면에서 끝나는 트레이스의 오차를 줄이기 위해 조금 연장
+	const float TraceLength = FMath::Min(
+		FVector::Distance(MuzzleLocation, AimPoint) + 2.0f,
+		PistolTraceDistance
+	);
+
+	const FVector ShotEnd =
+		MuzzleLocation + ShotDirection * TraceLength;
+
+	// 2. 총구 트레이스: 실제 명중 판정
+	FHitResult ShotHit;
+
+	const bool bShotHit = World->LineTraceSingleByChannel(
+		ShotHit,
+		MuzzleLocation,
+		ShotEnd,
+		ECC_Visibility,
+		QueryParams
+	);
+
+	if (bDrawPistolTrace)
+	{
+		DrawDebugLine(
+			World,
+			MuzzleLocation,
+			bShotHit ? ShotHit.ImpactPoint : ShotEnd,
+			bShotHit ? FColor::Green : FColor::Red,
+			false,
+			1.0f,
+			0,
+			1.0f
+		);
+	}
+
+	if (!bShotHit)
+	{
+		return;
+	}
+
+	APortfolio_GlobalCharacter* HitCharacter =
+		Cast<APortfolio_GlobalCharacter>(ShotHit.GetActor());
+
+	// 벽 등에 맞았다면 여기서 종료
+	if (!IsValid(HitCharacter))
+	{
+		return;
+	}
+
+	PlayEnemyHitEffect(ShotHit);
+
+	const FName BoneName = ShotHit.BoneName;
+
+	float FinalDamage = PistolDamage;
+
+	// 기존 샷건의 부위별 배율 유지
+	if (BoneName == FName(TEXT("Head")))
+	{
+		FinalDamage *= 1.75f;
+	}
+	else if (
+		BoneName == FName(TEXT("pelvis")) ||
+		BoneName == FName(TEXT("spine_01")) ||
+		BoneName == FName(TEXT("spine_02")))
+	{
+		FinalDamage *= 1.20f;
+	}
+
+	FPointDamageEvent DamageEvent;
+	DamageEvent.Damage = FinalDamage;
+	DamageEvent.HitInfo = ShotHit;
+	DamageEvent.ShotDirection = ShotDirection;
+
+	// 기존 몬스터의 HP 감소 처리 호출: 한 번만 실행
+	HitCharacter->TakeDamage(
+		FinalDamage,
+		DamageEvent,
+		GetInstigatorController(),
+		this
+	);
+
+	// 기존 부위 피격·스턴 처리에 정보 전달
+	HitCharacter->TakeDamageBone(
+		!BoneName.IsNone(),
+		BoneName,
+		DamageEvent,
+		GetInstigatorController(),
+		this
+	);
+}
+
 void APortfolio_Tile::OtherDamage(FHitResult HitResult_Other)
 {
-	float Damage = 100;
+	PlayEnemyHitEffect(HitResult_Other);
+
+	float Damage = ShotgunPelletDamage;
 	FVector ImpactPoint_Other = HitResult_Other.ImpactPoint;
 	HitResult_Other.GetActor();
 	UPrimitiveComponent* HitComponent_Other = HitResult_Other.GetComponent();

@@ -8,7 +8,13 @@
 #include "GameFramework/Character.h"
 #include "Components/PrimitiveComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include <UI/Portfolio_Widget_Inventory.h>
+#include "UI/Portfolio_HUD.h"
+#include "UI/Portfolio_Widget_Main.h"
+#include "UI/Portfolio_Widget_Inventory.h"
+#include "GameFramework/PlayerController.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SceneComponent.h"
+#include "Components/SphereComponent.h"
 
 // Sets default values
 APortfolio_Character::APortfolio_Character()
@@ -21,7 +27,7 @@ APortfolio_Character::APortfolio_Character()
 
 	//캐릭터 기본 이동속도 설정
 	MoveCom = Cast<UCharacterMovementComponent>(GetMovementComponent());
-	MoveCom->MaxWalkSpeed = 280.0f; 
+	MoveCom->MaxWalkSpeed = GetSpeed();  
 	
 	//Create our components 스프링암 설정
 	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
@@ -47,6 +53,244 @@ APortfolio_Character::APortfolio_Character()
 	//GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
 }
 
+UPortfolio_Widget_Inventory* APortfolio_Character::GetInventoryWidget() const
+{
+	APlayerController* PC =
+		Cast<APlayerController>(GetController());
+
+	if (!IsValid(PC))
+	{
+		return nullptr;
+	}
+
+	APortfolio_HUD* HUD = PC->GetHUD<APortfolio_HUD>();
+
+	if (!IsValid(HUD))
+	{
+		return nullptr;
+	}
+
+	UPortfolio_Widget_Main* MainWidget = HUD->GetMainWidget();
+
+	if (!IsValid(MainWidget))
+	{
+		return nullptr;
+	}
+
+	return Cast<UPortfolio_Widget_Inventory>(
+		MainWidget->GetWidgetFromName(TEXT("WBP_UI_Inventory"))
+	);
+}
+
+void APortfolio_Character::SyncInventoryAmmo()
+{
+	//if (!CurPlayerData)
+	//{
+	//	return;
+	//}
+	//
+	//UPortfolio_Widget_Inventory* Inventory = GetInventoryWidget();
+	//
+	//const int32 ReserveAmmo =
+	//	IsValid(Inventory) ? Inventory->GetAmmoCount() : 0;
+	//
+	//CurPlayerData->Bullet = ReserveAmmo;
+	//Bullet = ReserveAmmo;
+	//LoadBullet = CurPlayerData->LoadBullet;
+
+	UPortfolio_Widget_Inventory* Inventory = GetInventoryWidget();
+
+	Bullet = IsValid(Inventory)
+		? Inventory->GetAmmoCountForRow(GetCurrentAmmoRow())
+		: 0;
+
+	LoadBullet = GetLoadedAmmoRef();
+
+	// 기존 UI나 코드와의 호환을 위한 현재 무기 값
+	if (CurPlayerData)
+	{
+		CurPlayerData->Bullet = Bullet;
+		CurPlayerData->LoadBullet = LoadBullet;
+	}
+}
+
+void APortfolio_Character::EquipShotgun()
+{
+	EquipWeapon(EWeaponType::Shotgun);
+}
+
+void APortfolio_Character::EquipPistol()
+{
+	EquipWeapon(EWeaponType::Pistol);
+}
+
+void APortfolio_Character::EquipWeapon(EWeaponType NewWeapon)
+{
+	const EAniState State = GetAniState<EAniState>();
+
+	// 동작 중 교체 금지
+	if (State == EAniState::W_Attack ||
+		State == EAniState::Load ||
+		State == EAniState::Hit ||
+		State == EAniState::CrouchOn ||
+		State == EAniState::CrouchOff)
+	{
+		return;
+	}
+
+	auto* AnimInstance = GetGlobalAnimInstance();
+
+	if (!IsValid(AnimInstance))
+	{
+		return;
+	}
+
+	// 피스톨 필수 설정 확인
+	if (NewWeapon == EWeaponType::Pistol)
+	{
+		const EAniState RequiredStates[] =
+		{
+			EAniState::Idle,
+			EAniState::W_Aiming,
+			EAniState::W_Attack,
+			EAniState::Load
+		};
+
+		for (EAniState RequiredState : RequiredStates)
+		{
+			UAnimMontage* const* Montage =
+				PistolMapAnimation.Find(RequiredState);
+
+			if (!Montage || !IsValid(*Montage))
+			{
+				UE_LOG(
+					LogTemp, Warning,
+					TEXT("Pistol montage missing. State=%d"),
+					static_cast<int32>(RequiredState)
+				);
+
+				return;
+			}
+		}
+
+		if (!PistolProjectileClass)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("PistolProjectileClass is not assigned."));
+			return;
+		}
+	}
+
+	// 기존 동작을 종료한 뒤 새 몽타주 목록 적용
+	AnimInstance->Montage_Stop(0.0f);
+
+	CurrentWeapon = NewWeapon;
+
+	TMap<EAniState, UAnimMontage*> ActiveAnimations = MapAnimation;
+
+	if (CurrentWeapon == EWeaponType::Pistol)
+	{
+		for (const auto& Pair : PistolMapAnimation)
+		{
+			if (IsValid(Pair.Value))
+			{
+				ActiveAnimations.Add(Pair.Key, Pair.Value);
+			}
+		}
+	}
+
+	// 캐릭터가 조회하는 목록 갱신
+	SetAllAnimation(ActiveAnimations);
+
+	// 실제 재생을 담당하는 AnimInstance 목록도 갱신
+	AnimInstance->AllAnimations.Empty();
+
+	for (const auto& Pair : ActiveAnimations)
+	{
+		AnimInstance->AllAnimations.Add(
+			static_cast<int32>(Pair.Key),
+			Pair.Value
+		);
+	}
+
+	AnimInstance->CurMontage = nullptr;
+
+	// 태그가 지정된 무기 메시 표시 전환
+	auto SetWeaponVisible = [&](FName ComponentTag, bool bVisible)
+		{
+			const TArray<UActorComponent*> Components =
+				GetComponentsByTag(
+					USceneComponent::StaticClass(),
+					ComponentTag
+				);
+
+			for (UActorComponent* Component : Components)
+			{
+				if (USceneComponent* SceneComponent =
+					Cast<USceneComponent>(Component))
+				{
+					SceneComponent->SetVisibility(bVisible, true);
+					SceneComponent->SetHiddenInGame(!bVisible, true);
+				}
+			}
+		};
+
+	SetWeaponVisible(
+		TEXT("WeaponMesh"),
+		CurrentWeapon == EWeaponType::Shotgun
+	);
+
+	SetWeaponVisible(
+		TEXT("PistolMesh"),
+		CurrentWeapon == EWeaponType::Pistol
+	);
+
+	bShotPending = false;
+	bPistolReloadApplied = false;
+
+	RunCheck = 0;
+	RunZooming = false;
+	CrouchCheck = 0;
+	CrouchZooming = false;
+
+	SetAniState(
+		AimingCheck ? EAniState::W_Aiming : EAniState::Idle
+	);
+
+	SyncInventoryAmmo();
+}
+
+int32 APortfolio_Character::GetMaxAmmo() const
+{
+	return FMath::Max(
+		1,
+		CurrentWeapon == EWeaponType::Shotgun
+		? ShotgunMaxAmmo
+		: PistolMaxAmmo
+	);
+}
+
+int32& APortfolio_Character::GetLoadedAmmoRef()
+{
+	return CurrentWeapon == EWeaponType::Shotgun
+		? ShotgunLoadedAmmo
+		: PistolLoadedAmmo;
+}
+
+FDataTableRowHandle APortfolio_Character::GetCurrentAmmoRow() const
+{
+	UPortfolio_Widget_Inventory* Inventory = GetInventoryWidget();
+
+	if (!IsValid(Inventory))
+	{
+		return FDataTableRowHandle();
+	}
+
+	return CurrentWeapon == EWeaponType::Shotgun
+		? Inventory->AmmoItemRow
+		: Inventory->PistolAmmoItemRow;
+}
+
 // Called when the game starts or when spawned
 void APortfolio_Character::BeginPlay()
 {
@@ -61,14 +305,25 @@ void APortfolio_Character::BeginPlay()
 	{
 		CurPlayerData = Inst->GetPlayerData(PlayerDataName);
 	}
-	PlayerAtt = CurPlayerData->ATT;
 
-	CurPlayerData->Bullet = 5;
-	Damage(PlayerAtt);
+	if (CurPlayerData)
+	{
+		PlayerAtt = CurPlayerData->ATT;
+		Damage(PlayerAtt);
+
+		ShotgunLoadedAmmo = FMath::Clamp(
+			CurPlayerData->LoadBullet,
+			0,
+			FMath::Max(1, ShotgunMaxAmmo)
+		);
+	}
+
+	PistolLoadedAmmo = 0;
 
 	GetGlobalAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &APortfolio_Character::MontageEnd);
 	GetGlobalAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &APortfolio_Character::AnimNotifyBegin);
 	SetAniState(EAniState::Idle);
+	EquipWeapon(EWeaponType::Shotgun);
 }
 
 // Called every frame
@@ -80,8 +335,7 @@ void APortfolio_Character::Tick(float DeltaTime)
 
 	AniStateValue = GetAniState<EAniState>();
 
-	Bullet = CurPlayerData->Bullet;
-	LoadBullet = CurPlayerData->LoadBullet;
+	SyncInventoryAmmo();
 	
 	if (GetItem == true)
 	{
@@ -90,7 +344,7 @@ void APortfolio_Character::Tick(float DeltaTime)
 
 	if (GetitemCheck == true && Item_Get_InputCheck == true)
 	{
-		CurPlayerData->Bullet += 1;
+		//CurPlayerData->Bullet += 1;
 		Item_Get_InputCheck = false;
 	}
 	else 
@@ -149,43 +403,32 @@ void APortfolio_Character::Tick(float DeltaTime)
 		OurCameraSpringArm->SocketOffset.Z = FMath::Lerp<float>(65.0f, C, ZoomFactor);
 	}
 
-	/*
-	UPortfolio_Widget_Inventory* MyWidget = CreateWidget<UPortfolio_Widget_Inventory>(GetWorld(), UPortfolio_Widget_Inventory::StaticClass());
-	if (MyWidget)
-	{
-		// 유저위젯 클래스의 변수 설정
-		//MyWidget->MyVariable = 42;
-
-		// 유저위젯 클래스의 변수 읽기
-		int32 WidgetVariableValue = MyWidget->MyVariable;
-		_Bullet += WidgetVariableValue;
-	}
-	*/
 	//공격에서 AttackCheck == 1이 되면 여기서 공격실행
-	{
-		if (AttackCheck == 1) {
-
-	        if (AimingActionCheck == 1 && AniStateValue == EAniState::W_Aiming)
-	        {
-				SetAniState(EAniState::W_Attack);
-
-				//AimingAttack();
-				CurPlayerData->LoadBullet -= 1;
-			    AttackCheck= 0;
-	        }
- 
-	        if (AimingActionCheck == 1
-		        || AniStateValue == EAniState::Aiming_ForwardMove
-		        || AniStateValue == EAniState::Aiming_BackwardMove
-		        || AniStateValue == EAniState::Aiming_RightMove
-		        || AniStateValue == EAniState::Aiming_LeftMove)
-	        {
-				SetAniState(EAniState::W_Attack);
-				AttackCheck= 0;
-	        }
-		}
-	}
+	//{
+	//	if (AttackCheck == 1) {
+	//
+	//        if (AimingActionCheck == 1 && AniStateValue == EAniState::W_Aiming)
+	//        {
+	//			SetAniState(EAniState::W_Attack);
+	//
+	//			//AimingAttack();
+	//			CurPlayerData->LoadBullet -= 1;
+	//		    AttackCheck= 0;
+	//        }
+ 	//
+	//        if (AimingActionCheck == 1
+	//	        || AniStateValue == EAniState::Aiming_ForwardMove
+	//	        || AniStateValue == EAniState::Aiming_BackwardMove
+	//	        || AniStateValue == EAniState::Aiming_RightMove
+	//	        || AniStateValue == EAniState::Aiming_LeftMove)
+	//        {
+	//			SetAniState(EAniState::W_Attack);
+	//			AttackCheck= 0;
+	//        }
+	//	}
+	//}
 }
+
 
 void APortfolio_Character::ZoomCheck(float *_A, float *_B, float *_C, float* _S)
 {
@@ -197,57 +440,61 @@ void APortfolio_Character::ZoomCheck(float *_A, float *_B, float *_C, float* _S)
 
 void APortfolio_Character::MontageEnd(UAnimMontage* Anim, bool _Inter)
 {
-	TSubclassOf<UAnimInstance> Inst = APortfolio_Character::StaticClass();
-
-	// Anim 종료된 몽타주
-	if (MapAnimation[EAniState::W_Attack] == Anim)
+	if (!Anim)
 	{
-		if (AniStateValue == EAniState::Idle)
-		{
-			return;
-		}
-		else
-		{
-			SetAniState(EAniState::W_Aiming);
-		}
+		return;
 	}
 
-	if (MapAnimation[EAniState::CrouchOn] == Anim)
+	const EAniState State = GetAniState<EAniState>();
+
+	if (Anim == GetAnimMontage(EAniState::Load))
 	{
-		if (AniStateValue == EAniState::Crouch_Idle)
+		bPistolReloadApplied = false;
+
+		if (State == EAniState::Load)
 		{
-			return;
+			SetAniState(
+				AimingCheck ? EAniState::W_Aiming : EAniState::Idle
+			);
 		}
-		else
-		{
-			SetAniState(EAniState::Crouch_Idle);
-		}
+
+		return;
 	}
 
-	if (MapAnimation[EAniState::CrouchOff] == Anim)
+	if (Anim == GetAnimMontage(EAniState::W_Attack))
 	{
-		if (AniStateValue == EAniState::Idle)
-		{
-			return;
-		}
-		else
-		{
+		bShotPending = false;
 
-			SetAniState(EAniState::Idle);
+		if (State == EAniState::W_Attack)
+		{
+			SetAniState(
+				AimingCheck ? EAniState::W_Aiming : EAniState::Idle
+			);
 		}
+
+		return;
 	}
 
-	if (MapAnimation[EAniState::Hit] == Anim)
+	if (Anim == GetAnimMontage(EAniState::CrouchOn) &&
+		State == EAniState::CrouchOn)
 	{
-		if (AniStateValue == EAniState::Idle)
-		{
-			return;
-		}
-		else
-		{
+		SetAniState(EAniState::Crouch_Idle);
+		return;
+	}
 
-			SetAniState(EAniState::Idle);
-		}
+	if (Anim == GetAnimMontage(EAniState::CrouchOff) &&
+		State == EAniState::CrouchOff)
+	{
+		SetAniState(EAniState::Idle);
+		return;
+	}
+
+	if (Anim == GetAnimMontage(EAniState::Hit) &&
+		State == EAniState::Hit)
+	{
+		SetAniState(
+			AimingCheck ? EAniState::W_Aiming : EAniState::Idle
+		);
 	}
 }
 
@@ -282,6 +529,14 @@ void APortfolio_Character::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping(TEXT("PlayerCrouch"), EKeys::Q));
 		UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping(TEXT("StatusWindow"), EKeys::Zero));
 		UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping(TEXT("InventoryWindow"), EKeys::Nine));
+
+		UPlayerInput::AddEngineDefinedActionMapping(
+			FInputActionKeyMapping(TEXT("EquipShotgun"), EKeys::One)
+		);
+
+		UPlayerInput::AddEngineDefinedActionMapping(
+			FInputActionKeyMapping(TEXT("EquipPistol"), EKeys::Two)
+		);
 	}
 
 	// 키와 함수를 연결한다
@@ -305,11 +560,26 @@ void APortfolio_Character::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("PlayerRun", EInputEvent::IE_Pressed, this, &APortfolio_Character::Run);
 	PlayerInputComponent->BindAction("PlayerCrouch", EInputEvent::IE_Pressed, this, &APortfolio_Character::Crouch);
 	
+	PlayerInputComponent->BindAction(
+		TEXT("EquipShotgun"),
+		IE_Pressed,
+		this,
+		&APortfolio_Character::EquipShotgun
+	);
+
+	PlayerInputComponent->BindAction(
+		TEXT("EquipPistol"),
+		IE_Pressed,
+		this,
+		&APortfolio_Character::EquipPistol
+	);
 }
 
 //좌우이동
 void APortfolio_Character::MoveRight(float Val)
 {
+	AniStateValue = GetAniState<EAniState>();
+
 	if (Val != 0.f)
 	{
 		if (Controller)
@@ -319,10 +589,19 @@ void APortfolio_Character::MoveRight(float Val)
 			// 현재 내 회전을 가져와서 y축에 해당하는 축벡터를 얻어오는 겁니다.
 			AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::Y), Val);
 
+			// 이동은 적용하고 공격·장전 애니메이션은 유지
+			const EAniState State = GetAniState<EAniState>();
+
+			if (State == EAniState::W_Attack ||
+				State == EAniState::Load)
+			{
+				return;
+			}
+
 			//달리기 이동
 			if (RunCheck == 1 && AimingActionCheck == 0 && AniStateValue != EAniState::Idle)
 			{
-				MoveCom->MaxWalkSpeed = 360.0f;
+				MoveCom->MaxWalkSpeed = GetSpeed() * 1.9f; // 150%
 				RunZooming = true;
 				SetAniState(Val > 0.f ? EAniState::RightRun : EAniState::LeftRun);
 				return;
@@ -331,7 +610,7 @@ void APortfolio_Character::MoveRight(float Val)
 			//웅크리기 이동
 			if (CrouchCheck == 1)
 			{
-				MoveCom->MaxWalkSpeed = 200.0f;
+				MoveCom->MaxWalkSpeed = GetSpeed() * 0.8f; // 80%
 				SetAniState(Val > 0.f ? EAniState::Crouch_RightMove : EAniState::Crouch_LeftMove);
 				return;
 			}
@@ -340,13 +619,13 @@ void APortfolio_Character::MoveRight(float Val)
 		    {
 			    if (AimingActionCheck == 0) 
 			    {
-			  	    MoveCom->MaxWalkSpeed = 280.0f;
+			  	    MoveCom->MaxWalkSpeed = GetSpeed(); 
 					SetAniState(Val > 0.f ? EAniState::RightMove : EAniState::LeftMove);
 				    return;
 			    }
 			    else 
 			    {
-			    	MoveCom->MaxWalkSpeed = 230.0f;
+			    	MoveCom->MaxWalkSpeed = GetSpeed() * 0.7f; // 70%
 					SetAniState(Val > 0.f ? EAniState::Aiming_RightMove : EAniState::Aiming_LeftMove);
 				    return;
 		  	    }  
@@ -383,6 +662,8 @@ void APortfolio_Character::MoveRight(float Val)
 //앞뒤이동
 void APortfolio_Character::MoveForward(float Val)
 {
+	AniStateValue = GetAniState<EAniState>();
+
 	if (Val != 0.f)
 	{
 
@@ -394,10 +675,19 @@ void APortfolio_Character::MoveForward(float Val)
 			const FVector Direction = FRotationMatrix(YawRotation).GetScaledAxis(EAxis::X);
 			AddMovementInput(Direction, Val);
 
+			// 이동은 적용하고 공격·장전 애니메이션은 유지
+			const EAniState State = GetAniState<EAniState>();
+
+			if (State == EAniState::W_Attack ||
+				State == EAniState::Load)
+			{
+				return;
+			}
+
 			//달리기 이동
 			if (RunCheck == 1 && AimingActionCheck == 0 && AniStateValue != EAniState::Idle)
 			{
-				MoveCom->MaxWalkSpeed = 360.0f;
+				MoveCom->MaxWalkSpeed = GetSpeed() * 1.9f; // 150%
 				RunZooming = true;
 				SetAniState(Val > 0.f ? EAniState::ForwardRun : EAniState::BackwardRun);
 				return;
@@ -406,7 +696,7 @@ void APortfolio_Character::MoveForward(float Val)
 			//웅크리기 이동
 			if (CrouchCheck == 1)
 			{
-				MoveCom->MaxWalkSpeed = 200.0f;
+				MoveCom->MaxWalkSpeed = GetSpeed() * 0.8f; // 80%
 				SetAniState(Val > 0.f ? EAniState::Crouch_ForwardMove : EAniState::Crouch_BackwardMove);
 				return;
 			}
@@ -415,13 +705,13 @@ void APortfolio_Character::MoveForward(float Val)
 			{
 				if (AimingActionCheck == 0)
 				{
-					MoveCom->MaxWalkSpeed = 280.0f;
+					MoveCom->MaxWalkSpeed = GetSpeed(); 
 					SetAniState(Val > 0.f ? EAniState::ForwardMove : EAniState::BackwardMove);
 					return;
 				}
 				else
 				{
-					MoveCom->MaxWalkSpeed = 230.0f;
+					MoveCom->MaxWalkSpeed = GetSpeed() * 0.7f; // 70%
 					float a = 60.0f; //타겟암 길이
 					float b = 80.0f; //타겟암 Y축
 					float c = 70.0f; //타겟암 Z축
@@ -474,32 +764,43 @@ void APortfolio_Character::LookUpAtRate(float Rate)
 //장전
 void APortfolio_Character::LoadAction()
 {
-	int _LoadBullet = 6 - CurPlayerData->LoadBullet;
-	if (CurPlayerData->LoadBullet <= 5)
+	if (!CurPlayerData)
 	{
-		if (CurPlayerData->Bullet != 0) 
-		{
-		    SetAniState(EAniState::Load);
-
-			//_LoadBullet = 6 - _LoadBullet ;
-			//_LoadBullet *= -1;
-			for (int i = 1; i < _LoadBullet; i++)
-			{
-				if (CurPlayerData->Bullet != 0)
-				{
-				    CurPlayerData->LoadBullet += 1;
-					CurPlayerData->Bullet -= 1;
-				}
-			}
-		}
+		return;
 	}
 
+	const EAniState State = GetAniState<EAniState>();
+
+	if (State == EAniState::Load ||
+		State == EAniState::W_Attack ||
+		State == EAniState::Hit)
+	{
+		return;
+	}
+
+	// 검사 전에 최신 수량으로 갱신
+	SyncInventoryAmmo();
+
+	if (GetLoadedAmmoRef() >= GetMaxAmmo() || Bullet <= 0)
+	{
+		return;
+	}
+
+	bPistolReloadApplied = false;
+	SetAniState(EAniState::Load);
 }
 
 //조준
 void APortfolio_Character::IN_AimingAction()
 {
-	SetAniState(EAniState::W_Aiming);
+	const EAniState State = GetAniState<EAniState>();
+
+	if (State != EAniState::Load &&
+		State != EAniState::W_Attack &&
+		State != EAniState::Hit)
+	{
+		SetAniState(EAniState::W_Aiming);
+	}
 
 	SetAimingCheck(true);
 
@@ -520,106 +821,272 @@ void APortfolio_Character::IN_AimingAction()
 
 void APortfolio_Character::OUT_AimingAction()
 {
-	if (AimingActionCheck == 0)
-	{
-		SetAniState(EAniState::Idle);
-	}
-	else
-	{
-		SetAniState(EAniState::Idle);
-		AimingActionCheck = 0;
-	}
-
+	AimingActionCheck = 0;
 	SetAimingCheck(false);
 	bZoomingIn = false;
+
+	const EAniState State = GetAniState<EAniState>();
+
+	if (State != EAniState::Load &&
+		State != EAniState::W_Attack &&
+		State != EAniState::Hit)
+	{
+		SetAniState(EAniState::Idle);
+	}
 }
 
 //공격
 void APortfolio_Character::AttackAction()
 {
-	/*
-	if ( AimingActionCheck == 1 && AniState == EAniState::W_Aiming )
+	if (!CurPlayerData || AimingActionCheck != 1)
 	{
-	    AniState = EAniState::W_Attack;
+		return;
 	}
 
-	if (AimingActionCheck == 1 
-		|| AniState == EAniState::Aiming_ForwardMove
-		|| AniState == EAniState::Aiming_BackwardMove
-		|| AniState == EAniState::Aiming_RightMove
-		|| AniState == EAniState::Aiming_LeftMove )
+	const EAniState State = GetAniState<EAniState>();
+
+	const bool bCanAttack =
+		State == EAniState::W_Aiming ||
+		State == EAniState::Aiming_ForwardMove ||
+		State == EAniState::Aiming_BackwardMove ||
+		State == EAniState::Aiming_RightMove ||
+		State == EAniState::Aiming_LeftMove;
+
+	if (!bCanAttack)
 	{
-		AniState = EAniState::W_Attack;
-    }
-	*/
-
-	int _LoadBullet = CurPlayerData->LoadBullet;
-	if (_LoadBullet != 0 ) 
-	{
-
-		//Tick에서 공격
-		AttackCheck = 1;
-
+		return;
 	}
-	return;
+
+	if (GetLoadedAmmoRef() <= 0)
+	{
+		LoadAction();
+		return;
+	}
+
+	--GetLoadedAmmoRef();
+	bShotPending = true;
+
+	SetAniState(EAniState::W_Attack);
+	SyncInventoryAmmo();
 }
 
 //이펙트(공격)
 void APortfolio_Character::AnimNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
-	UPortfolio_GameInstance* Inst = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
-
-	TSubclassOf<UObject> Effect = Inst->GetSubClass(TEXT("ShotEffect"));
-	TSubclassOf<UObject> ShellEffect = Inst->GetSubClass(TEXT("ShellEffect"));
-	TSubclassOf<UObject> RangeAttack = Inst->GetSubClass(TEXT("PlayerRangeAttack"));
-
-	/*
-	if (nullptr != Effect)
+	if (!CurPlayerData)
 	{
-		AActor* Actor = GetWorld()->SpawnActor<AActor>(Effect);
-		Actor->SetActorLocation(GetActorLocation());
-		Actor->SetActorRotation(GetActorRotation());
+		return;
 	}
-	*/
-	if (nullptr != Effect)
+
+	// 샷건: 한 발씩 장전
+	if (NotifyName == FName(TEXT("ReloadShell")))
 	{
-		FTransform Trans;
-		FVector Pos;
-		TArray<UActorComponent*> MeshEffects = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponEffect"));
-		TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponMesh"));
-
-		USceneComponent* EffectCom = Cast<USceneComponent>(MeshEffects[0]);
-		Pos = EffectCom->GetComponentToWorld().GetLocation();
-
-		// 발사체 만들기
+		if (CurrentWeapon != EWeaponType::Shotgun ||
+			GetAniState<EAniState>() != EAniState::Load)
 		{
-			AActor* Actor = GetWorld()->SpawnActor<AActor>(RangeAttack);
-			Actor->Tags.Add(TEXT("Damage"));
-			APortfolio_Tile* ProjectTile = Cast<APortfolio_Tile>(Actor);
-			ProjectTile->SetActorLocation(Pos);
-			ProjectTile->SetActorRotation(GetActorRotation());
-			ProjectTile->GetSphereComponent()->SetCollisionProfileName(TEXT("PlayerAttack"), true);
-			ProjectTile->AimingAttack(CameraLoc, CameraForward);
-			ProjectTile->PerformSweep(CameraLoc, CameraForward);
+			return;
+		}
+
+		UPortfolio_Widget_Inventory* Inventory = GetInventoryWidget();
+
+		if (GetLoadedAmmoRef() < GetMaxAmmo() &&
+			IsValid(Inventory) &&
+			Inventory->TryConsumeAmmoForRow(
+				GetCurrentAmmoRow(), 1))
+		{
+			++GetLoadedAmmoRef();
+		}
+
+		SyncInventoryAmmo();
+
+		if (GetLoadedAmmoRef() >= GetMaxAmmo() || Bullet <= 0)
+		{
+			UAnimMontage* ReloadMontage =
+				GetAnimMontage(EAniState::Load);
+
+			SetAniState(
+				AimingCheck ? EAniState::W_Aiming : EAniState::Idle
+			);
+
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+			if (IsValid(AnimInstance) && IsValid(ReloadMontage))
+			{
+				AnimInstance->Montage_Stop(0.15f, ReloadMontage);
+			}
+		}
+
+		return;
+	}
+
+	// 피스톨: 탄창 삽입 시 필요한 수량을 한 번에 장전
+	if (NotifyName == FName(TEXT("ReloadMagazine")))
+	{
+		if (CurrentWeapon != EWeaponType::Pistol ||
+			GetAniState<EAniState>() != EAniState::Load ||
+			bPistolReloadApplied)
+		{
+			return;
+		}
+
+		bPistolReloadApplied = true;
+
+		UPortfolio_Widget_Inventory* Inventory = GetInventoryWidget();
+
+		if (!IsValid(Inventory))
+		{
+			return;
+		}
+
+		const FDataTableRowHandle AmmoRow = GetCurrentAmmoRow();
+
+		const int32 Needed =
+			FMath::Max(0, GetMaxAmmo() - GetLoadedAmmoRef());
+
+		const int32 Amount = FMath::Min(
+			Needed,
+			Inventory->GetAmmoCountForRow(AmmoRow)
+		);
+
+		if (Amount > 0 &&
+			Inventory->TryConsumeAmmoForRow(AmmoRow, Amount))
+		{
+			GetLoadedAmmoRef() += Amount;
+		}
+
+		SyncInventoryAmmo();
+
+		// 탄창 삽입 후 남은 장전 동작은 끝까지 재생
+		return;
+	}
+
+	// 발사 이벤트만 아래로 통과
+	if (NotifyName != FName(TEXT("Fire")) ||
+		GetAniState<EAniState>() != EAniState::W_Attack ||
+		!bShotPending)
+	{
+		return;
+	}
+
+	bShotPending = false;
+
+	const FName MuzzleTag =
+		CurrentWeapon == EWeaponType::Shotgun
+		? FName(TEXT("WeaponEffect"))
+		: FName(TEXT("PistolEffect"));
+
+	const TArray<UActorComponent*> MuzzleComponents =
+		GetComponentsByTag(USceneComponent::StaticClass(), MuzzleTag);
+
+	if (MuzzleComponents.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("Weapon muzzle component is missing."));
+		return;
+	}
+
+	USceneComponent* Muzzle =
+		Cast<USceneComponent>(MuzzleComponents[0]);
+
+	if (!IsValid(Muzzle))
+	{
+		return;
+	}
+
+	UClass* ProjectileClass = nullptr;
+
+	if (CurrentWeapon == EWeaponType::Pistol)
+	{
+		ProjectileClass = PistolProjectileClass.Get();
+	}
+	else
+	{
+		auto* Inst =
+			GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
+
+		if (IsValid(Inst))
+		{
+			ProjectileClass =
+				Inst->GetSubClass(TEXT("PlayerRangeAttack")).Get();
 		}
 	}
-	/*
-	if (nullptr != ShellEffect)
-	{
-		FTransform Trans;
-		FVector Pos;
-		TArray<UActorComponent*> MeshEffects = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("ShellEffect"));
-		TArray<UActorComponent*> StaticMeshs = GetComponentsByTag(USceneComponent::StaticClass(), TEXT("WeaponMesh"));
 
-		USceneComponent* EffectCom = Cast<USceneComponent>(MeshEffects[1]);
-		Pos = EffectCom->GetComponentToWorld().GetLocation();
+	if (!ProjectileClass ||
+		!ProjectileClass->IsChildOf(APortfolio_Tile::StaticClass()))
+	{
+		return;
 	}
-	*/
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.Instigator = this;
+
+	APortfolio_Tile* Projectile =
+		GetWorld()->SpawnActor<APortfolio_Tile>(
+			ProjectileClass,
+			Muzzle->GetComponentLocation(),
+			camera->GetComponentRotation(),
+			SpawnParameters
+		);
+
+	if (!IsValid(Projectile))
+	{
+		return;
+	}
+
+	const FVector AimLocation = camera->GetComponentLocation();
+	const FVector AimDirection = camera->GetForwardVector();
+
+	if (CurrentWeapon == EWeaponType::Pistol)
+	{
+		// 피스톨 피해는 트레이스로만 처리
+		// 발사체의 오버랩으로 추가 피해가 발생하는 것을 방지
+		Projectile->SetActorEnableCollision(false);
+		Projectile->Tags.Remove(FName(TEXT("Damage")));
+
+		if (USphereComponent* Sphere =
+			Projectile->GetSphereComponent())
+		{
+			Sphere->SetCollisionEnabled(
+				ECollisionEnabled::NoCollision
+			);
+
+			Sphere->ComponentTags.Remove(
+				FName(TEXT("Damage"))
+			);
+		}
+
+		Projectile->PistolAttack(AimLocation, AimDirection);
+	}
+	else
+	{
+		// 샷건의 기존 공격 처리
+		Projectile->Tags.AddUnique(TEXT("Damage"));
+
+		if (Projectile->GetSphereComponent())
+		{
+			Projectile->GetSphereComponent()->SetCollisionProfileName(
+				TEXT("PlayerAttack"), true
+			);
+		}
+
+		Projectile->AimingAttack(AimLocation, AimDirection);
+		Projectile->PerformSweep(AimLocation, AimDirection);
+	}
 }
 
 //달리기
 void APortfolio_Character::Run() 
 {
+	const EAniState State = GetAniState<EAniState>();
+
+	if (State == EAniState::Load ||
+		State == EAniState::W_Attack ||
+		State == EAniState::Hit)
+	{
+		return;
+	}
+
 	float a = 145.0f; //타겟암 길이
 	float b = 45.0f; //타겟암 Y축
 	float c = 60.0f; //타켓암 Z축
@@ -645,6 +1112,15 @@ void APortfolio_Character::Run()
 //웅크리기
 void APortfolio_Character::Crouch() 
 {
+	const EAniState State = GetAniState<EAniState>();
+
+	if (State == EAniState::Load ||
+		State == EAniState::W_Attack ||
+		State == EAniState::Hit)
+	{
+		return;
+	}
+
 	float a = 150.0f; //타겟암 길이
 	float b = 55.0f; //타겟암 Y축
 	float c = 50.0f; //타켓암 Z축

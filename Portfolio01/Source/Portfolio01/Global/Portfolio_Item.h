@@ -25,7 +25,12 @@ public:
 	//  ItemCheckOnOff = ItemCheckOnOff == ESlateVisibility::Hidden ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
 	//}
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	FDataTableRowHandle ItemRow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item",
+		meta = (ClampMin = "1", UIMin = "1"))
+	int32 PickupAmount = 1;
 
 protected:
 	// Called when the game starts or when spawned

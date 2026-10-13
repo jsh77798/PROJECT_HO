@@ -24,165 +24,250 @@ UBTTask_MOVE::UBTTask_MOVE()
 
 EBTNodeResult::Type UBTTask_MOVE::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	auto* Character = GetGlobalCharacter(OwnerComp);
+	UBlackboardComponent* Blackboard =
+		OwnerComp.GetBlackboardComponent();
 
-	GetGlobalCharacter(OwnerComp)->SetAniState(AIState::MOVE);
-
-	UCharacterMovementComponent* MoveCom = Cast<UCharacterMovementComponent>(GetGlobalCharacter(OwnerComp)->GetMovementComponent());
-
-	if (nullptr != MoveCom)
+	if (!IsValid(Character) || !IsValid(Blackboard))
 	{
-		MoveCom->MaxWalkSpeed = 100.0f;
+		return EBTNodeResult::Failed;
 	}
 
+	// ExecuteTask 전용 상태 변경.
+	// 작업 종료는 아래 return 값으로 처리합니다.
+	auto ChangeState = [&](AIState NewState)
+		{
+			Blackboard->SetValueAsEnum(
+				TEXT("AIState"),
+				static_cast<uint8>(NewState)
+			);
 
-	UObject* TargetObject = GetBlackboardComponent(OwnerComp)->GetValueAsObject(TEXT("TargetActor"));
-	AActor* TargetActor = Cast<AActor>(TargetObject);
-	FVector TargetPos = TargetActor->GetActorLocation();
+			ResetStateTime(OwnerComp);
+		};
 
-	UNavigationPath* PathPoint = PathFindNavPath(OwnerComp, TargetPos);
-	GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("NavPath"), PathPoint);
-	GetBlackboardComponent(OwnerComp)->SetValueAsVector(TEXT("LastPos"), TargetPos);
+	// 대상이 없어도 사망 판정부터 실행
+	if (Character->GetHP() <= 0)
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
 
-	return EBTNodeResult::Type::InProgress;
+		ChangeState(AIState::DEATH);
+		return EBTNodeResult::Failed;
+	}
+
+	AActor* TargetActor = Cast<AActor>(
+		Blackboard->GetValueAsObject(TEXT("TargetActor"))
+	);
+
+	if (!IsValid(TargetActor))
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
+
+		Blackboard->ClearValue(TEXT("TargetActor"));
+		Blackboard->ClearValue(TEXT("NavPath"));
+
+		ChangeState(AIState::RETURN);
+		return EBTNodeResult::Failed;
+	}
+
+	const FVector TargetPos = TargetActor->GetActorLocation();
+
+	// 이미 공격 거리 안이라면 경로를 만들 필요 없음
+	const float AttackRange =
+		Blackboard->GetValueAsFloat(TEXT("AttackRange"));
+
+	const float Distance = FVector::Dist2D(
+		Character->GetActorLocation(),
+		TargetPos
+	);
+
+	if (Distance <= AttackRange)
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
+
+		ChangeState(AIState::ATTACK);
+		return EBTNodeResult::Failed;
+	}
+
+	UNavigationPath* Path = PathFindNavPath(OwnerComp, TargetPos);
+
+	if (!IsValid(Path) ||
+		!Path->IsValid() ||
+		Path->PathPoints.Num() < 2)
+	{
+		Character->GetCharacterMovement()->StopMovementImmediately();
+
+		Blackboard->ClearValue(TEXT("NavPath"));
+
+		ChangeState(AIState::RETURN);
+		return EBTNodeResult::Failed;
+	}
+
+	Blackboard->SetValueAsObject(TEXT("NavPath"), Path);
+	Blackboard->SetValueAsVector(TEXT("LastPos"), TargetPos);
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = GetGlobalCharacter(OwnerComp)->GetSpeed();
+	Character->SetAniState(AIState::MOVE);
+
+	return EBTNodeResult::InProgress;
 }
 
 void UBTTask_MOVE::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DelataSeconds)
 {
-	Super::TickTask(OwnerComp, NodeMemory, DelataSeconds);
+    Super::TickTask(OwnerComp, NodeMemory, DelataSeconds);
 
-	UObject* TargetObject = GetBlackboardComponent(OwnerComp)->GetValueAsObject(TEXT("TargetActor"));
-	AActor* TargetActor = Cast<AActor>(TargetObject);
+    auto* Character = GetGlobalCharacter(OwnerComp);
+    UBlackboardComponent* Blackboard =
+        OwnerComp.GetBlackboardComponent();
 
-	if (nullptr == TargetActor)
-	{
-		GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("TargetActor"), nullptr);
-		SetStateChange(OwnerComp, AIState::RETURN);
-		return;
-	}
+    if (!IsValid(Character) || !IsValid(Blackboard))
+    {
+        FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+        return;
+    }
 
-	bool Target = GetBlackboardComponent(OwnerComp)->GetValueAsBool(TEXT("Death"));
+    UCharacterMovementComponent* MoveCom =
+        Character->GetCharacterMovement();
 
-	if (true == IsDeathCheck(OwnerComp))
-	{
-		SetStateChange(OwnerComp, AIState::DEATH);
-		return;
-	}
+    // 대상 유무와 관계없이 사망·스턴부터 검사.
+    // 이 함수들은 내부에서 이미 SetStateChange()를 호출합니다.
+    if (IsDeathCheck(OwnerComp))
+    {
+        MoveCom->StopMovementImmediately();
+        return;
+    }
 
-	if (true == IsStunCheck(OwnerComp))
-	{
-		SetStateChange(OwnerComp, AIState::STUN);
-		return;
-	}
+    if (IsStunCheck(OwnerComp))
+    {
+        MoveCom->StopMovementImmediately();
+        return;
+    }
 
-	//네비메쉬
-	// 너무 잦은 횟수로 길을 찾는 경우를 막는 경우는 다음과 같은 방법이 있다.
-	// 길을 너무 많이 찾으면 나중에 
+    // 실행 중인 작업에서 사용하는 상태 변경
+    auto ChangeState = [&](AIState NewState)
+        {
+            MoveCom->StopMovementImmediately();
+            SetStateChange(OwnerComp, NewState);
+        };
 
-	FVector ThisPos = GetGlobalCharacter(OwnerComp)->GetActorLocation();
-	FVector TargetPos = TargetActor->GetActorLocation();
-	FVector LastPos = TargetActor->GetActorLocation();
-	FVector CheckLastPos = GetBlackboardComponent(OwnerComp)->GetValueAsVector(TEXT("LastPos"));
+    AActor* TargetActor = Cast<AActor>(
+        Blackboard->GetValueAsObject(TEXT("TargetActor"))
+    );
 
-	if (LastPos != CheckLastPos)
-	{
-		// 이때만 갱신을 합니다.
-		UNavigationPath* NewPath = PathFindNavPath(OwnerComp, LastPos);
-		GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("NavPath"), NewPath);
-	}
+    if (!IsValid(TargetActor))
+    {
+        Blackboard->ClearValue(TEXT("TargetActor"));
+        Blackboard->ClearValue(TEXT("NavPath"));
 
-	// 이미 좋재하기 때문에 그냥 이미 존재하는 것에서 찾아오면 된다.
-	UObject* NavObject = GetBlackboardComponent(OwnerComp)->GetValueAsObject(TEXT("NavPath"));
-	UNavigationPath* NavPath = Cast<UNavigationPath>(NavObject);
+        ChangeState(AIState::RETURN);
+        return;
+    }
 
-	if (nullptr == NavPath)
-	{
-		GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("TargetActor"), nullptr);
-		SetStateChange(OwnerComp, AIState::RETURN);
-		return;
-	}
+    const FVector ThisPos = Character->GetActorLocation();
+    const FVector TargetPos = TargetActor->GetActorLocation();
 
-	// 길을 제대로 못찾았다는 이야기가 된다.
-	if (nullptr != NavPath && true == NavPath->PathPoints.IsEmpty())
-	{
-		GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("TargetActor"), nullptr);
-		SetStateChange(OwnerComp, AIState::RETURN);
-		return;
-	}
+    const FVector OriginPos =
+        Blackboard->GetValueAsVector(TEXT("OriginPos"));
 
-	if (nullptr != NavPath)
-	{
-		TargetPos = NavPath->PathPoints[1];
-	}
+    const float SearchRange =
+        Blackboard->GetValueAsFloat(TEXT("SearchRange"));
 
+    const float AttackRange =
+        Blackboard->GetValueAsFloat(TEXT("AttackRange"));
 
-	TargetPos.Z = 0.0f;
-	ThisPos.Z = 0.0f;
-	LastPos.Z = 0.0f;
+    const float TargetDistance =
+        FVector::Dist2D(ThisPos, TargetPos);
 
-	{
-		FVector Dir = TargetPos - ThisPos;
-		Dir.Normalize();
+    // 원래 위치 또는 추적 대상에게서 너무 멀어지면 복귀
+    if (FVector::Dist2D(ThisPos, OriginPos) >= SearchRange * 1.5f ||
+        TargetDistance > SearchRange)
+    {
+        ChangeState(AIState::RETURN);
+        return;
+    }
 
-		FVector OtherForward = GetGlobalCharacter(OwnerComp)->GetActorForwardVector();
-		OtherForward.Normalize();
+    // 경로 검사보다 먼저 공격 거리 확인
+    if (TargetDistance <= AttackRange)
+    {
+        ChangeState(AIState::ATTACK);
+        return;
+    }
 
-		FVector Cross = FVector::CrossProduct(OtherForward, Dir);
+    UNavigationPath* NavPath = Cast<UNavigationPath>(
+        Blackboard->GetValueAsObject(TEXT("NavPath"))
+    );
 
-		float Angle0 = Dir.Rotation().Yaw;
-		float Angle1 = OtherForward.Rotation().Yaw;
+    const FVector LastPos =
+        Blackboard->GetValueAsVector(TEXT("LastPos"));
 
-		if (FMath::Abs(Angle0 - Angle1) >= 10.0f)
-		{
-			FRotator Rot = FRotator::MakeFromEuler({ 0, 0, Cross.Z * 500.0f * DelataSeconds });
-			GetGlobalCharacter(OwnerComp)->AddActorWorldRotation(Rot);
-		}
-		else 
-		{
-			FRotator Rot = Dir.Rotation();
-			GetGlobalCharacter(OwnerComp)->SetActorRotation(Rot);
-		}
-	}
+    // 경로가 없거나 대상이 일정 거리 이상 이동하면 갱신
+    const bool bNeedNewPath =
+        !IsValid(NavPath) ||
+        !NavPath->IsValid() ||
+        NavPath->PathPoints.Num() < 2 ||
+        FVector::Dist2D(LastPos, TargetPos) >= 30.0f;
 
+    if (bNeedNewPath)
+    {
+        NavPath = PathFindNavPath(OwnerComp, TargetPos);
 
+        if (!IsValid(NavPath) ||
+            !NavPath->IsValid() ||
+            NavPath->PathPoints.Num() < 2)
+        {
+            Blackboard->ClearValue(TEXT("NavPath"));
 
-	{
-		FVector Dir = TargetPos - ThisPos;
+            ChangeState(AIState::RETURN);
+            return;
+        }
 
-		GetGlobalCharacter(OwnerComp)->AddMovementInput(Dir);
-		//GetGlobalCharacter(OwnerComp)->SetActorRotation(Dir.Rotation());
+        Blackboard->SetValueAsObject(TEXT("NavPath"), NavPath);
 
-		FVector OriginPos = GetBlackboardComponent(OwnerComp)->GetValueAsVector(TEXT("OriginPos"));
-		float SearchRange = GetBlackboardComponent(OwnerComp)->GetValueAsFloat(TEXT("SearchRange"));
-		float AttackRange = GetBlackboardComponent(OwnerComp)->GetValueAsFloat(TEXT("AttackRange"));
+        // 갱신한 목표 위치도 반드시 저장
+        Blackboard->SetValueAsVector(TEXT("LastPos"), TargetPos);
+    }
 
-		OriginPos.Z = 0.0f;
-		FVector OriginDir = OriginPos - ThisPos;
-		
-		if (OriginDir.Size() >= SearchRange * 1.5f)
-		{
-			//GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("TargetActor"), nullptr);
-			SetStateChange(OwnerComp, AIState::RETURN);
-			int a = 0;
-			return;
-		}
-		
+    constexpr float WaypointAcceptanceRadius = 20.0f;
 
-		FVector LastDir = LastPos - ThisPos;
+    // 다음 경로 지점에 도착했다면 지나간 지점을 제거.
+    // [1]이 그다음 이동 지점을 가리키게 됩니다.
+    while (NavPath->PathPoints.Num() > 2 &&
+        FVector::Dist2D(
+            ThisPos,
+            NavPath->PathPoints[1]
+        ) <= WaypointAcceptanceRadius)
+    {
+        NavPath->PathPoints.RemoveAt(0);
+    }
 
-		
-		if (SearchRange < LastDir.Size())
-		{
-			//GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("TargetActor"), nullptr);
-			SetStateChange(OwnerComp, AIState::RETURN);
-			return;
-		}
-		
+    const FVector NextPoint = NavPath->PathPoints[1];
 
-		// 충분히 근접했다.
-		if (AttackRange >= LastDir.Size())
-		{
-			SetStateChange(OwnerComp, AIState::ATTACK);
-			return;
-		}
-	}
+    // 경로 끝에 도달했지만 아직 공격할 수 없는 경우.
+    // 부분 경로의 끝 등에서 제자리 걷기를 반복하지 않게 함.
+    if (NavPath->PathPoints.Num() == 2 &&
+        FVector::Dist2D(ThisPos, NextPoint) <= WaypointAcceptanceRadius)
+    {
+        Blackboard->ClearValue(TEXT("NavPath"));
+
+        ChangeState(AIState::RETURN);
+        return;
+    }
+
+    const FVector Direction =
+        (NextPoint - ThisPos).GetSafeNormal2D();
+
+    if (!Direction.IsNearlyZero())
+    {
+        const FRotator DesiredRotation = Direction.Rotation();
+
+        Character->SetActorRotation(
+            FMath::RInterpTo(
+                Character->GetActorRotation(),
+                DesiredRotation,
+                DelataSeconds,
+                8.0f
+            )
+        );
+
+        Character->AddMovementInput(Direction);
+    }
 }

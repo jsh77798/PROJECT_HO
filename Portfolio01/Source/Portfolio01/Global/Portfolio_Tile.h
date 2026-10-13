@@ -52,6 +52,24 @@ public:
 		UFUNCTION()
 		void AimingAttack(FVector CameraLoc, FVector CameraForward);
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shotgun",
+			meta = (ClampMin = "0.0"))
+		float ShotgunPelletDamage = 100.0f;
+
+		// 피스톨 전용 공격
+		void PistolAttack(FVector CameraLoc, FVector CameraForward);
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pistol",
+			meta = (ClampMin = "0.0"))
+		float PistolDamage = 200.0f;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pistol",
+			meta = (ClampMin = "1.0"))
+		float PistolTraceDistance = 10000.0f;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pistol")
+		bool bDrawPistolTrace = false;
+
 		UFUNCTION()
 		void OtherDamage(FHitResult HitResult_Other);
 
@@ -69,6 +87,25 @@ public:
 		//UFUNCTION()
 		//void PerformLineTrace();
 
+public:
+		// 출혈 파티클
+	    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+	    class UNiagaraSystem* BloodEffect = nullptr;
+
+		// 피격 사운드: Sound Wave 또는 Sound Cue
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		class USoundBase* HitSound = nullptr;
+
+		// 거리별 음량 및 공간화 설정
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		class USoundAttenuation* HitSoundAttenuation = nullptr;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect",
+			meta = (ClampMin = "0.01"))
+		float BloodEffectScale = 1.0f;
+
+		void PlayEnemyHitEffect(const FHitResult& Hit);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,8 +115,11 @@ private:
 
 	//Called every frame
 	UFUNCTION()
-		void DestroyProjectile(AActor* _Destroy);
+	void DestroyProjectile(AActor* _Destroy);
 
 	UPROPERTY(Category = "Effect", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		class USphereComponent* SphereComponent = nullptr;
+	class USphereComponent* SphereComponent = nullptr;
+
+	// 한 발사에서 같은 적에게 효과가 중복 재생되는 것을 방지
+	TSet<TWeakObjectPtr<AActor>> HitEffectActors;
 };

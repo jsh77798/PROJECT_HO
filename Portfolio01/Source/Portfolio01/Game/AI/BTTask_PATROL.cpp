@@ -22,7 +22,7 @@ EBTNodeResult::Type UBTTask_PATROL::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 
 	if (nullptr != MoveCom)
 	{
-		MoveCom->MaxWalkSpeed = 55.0f;
+		MoveCom->MaxWalkSpeed = GetGlobalCharacter(OwnerComp)->GetSpeed() * 0.8f; // 80%
 	}
 
 
@@ -178,18 +178,42 @@ void UBTTask_PATROL::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 				// 그럼 다음 패트롤 포인트까지 변경한다.
 				++PP->CurrentIndex;
 
-				if (PatrolCurrentIndex == Positions.Num())
+				// 실제 접근할 배열과 인덱스를 검사
+				if (!PP->Positions.IsValidIndex(PP->CurrentIndex))
 				{
-					// 아이들로 다시 돌아간다.
+					// 순찰 완료: 다음 순찰을 위해 인덱스 초기화
+					PP->CurrentIndex = 0;
+
 					SetStateChange(OwnerComp, AIState::IDLE);
 					return;
 				}
 
-				// 에러가날 가능성이 높은데 일단 그냥 진행하자.
+				UNavigationPath* PathPoint = PathFindNavPath(
+					OwnerComp,
+					PP->Positions[PP->CurrentIndex]
+				);
 
-				UNavigationPath* PathPoint = PathFindNavPath(OwnerComp, PP->Positions[PP->CurrentIndex]);
-				GetBlackboardComponent(OwnerComp)->SetValueAsObject(TEXT("NavPath"), PathPoint);
-				GetBlackboardComponent(OwnerComp)->SetValueAsInt(TEXT("CurrentIndex"), 1);
+				if (!IsValid(PathPoint) ||
+					!PathPoint->IsValid() ||
+					PathPoint->PathPoints.Num() < 2)
+				{
+					SetStateChange(OwnerComp, AIState::IDLE);
+					return;
+				}
+
+				UBlackboardComponent* Blackboard =
+					OwnerComp.GetBlackboardComponent();
+
+				if (!IsValid(Blackboard))
+				{
+					FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+					return;
+				}
+
+				Blackboard->SetValueAsObject(TEXT("NavPath"), PathPoint);
+
+				// 새 경로의 첫 이동 지점부터 시작
+				Blackboard->SetValueAsInt(TEXT("CurrentIndex"), 1);
 				return;
 			}
 

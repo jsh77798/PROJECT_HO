@@ -10,7 +10,15 @@
 #include <UI/Portfolio_Widget_Main.h>
 #include "Portfolio_Enums.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/DataTable.h"
 #include "Portfolio_Character.generated.h"
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	Shotgun,
+	Pistol
+};
 
 UCLASS()
 class PORTFOLIO01_API APortfolio_Character : public APortfolio_GlobalCharacter
@@ -38,7 +46,7 @@ public:
 	UPROPERTY(Category = "ATT", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FName PlayerDataName = "NONE";
 
-	struct FPlayerData* CurPlayerData;
+	struct FPlayerData* CurPlayerData = nullptr;
 	int PlayerAtt = 0;
 
 	// 블루프린트에서 호출하게 하려면 기본적으로 public이어야 합니다.
@@ -53,6 +61,43 @@ public:
 
 	//UFUNCTION(BlueprintCallable)
 	//void BulletPlus();
+
+	class UPortfolio_Widget_Inventory* GetInventoryWidget() const;
+
+	void SyncInventoryAmmo();
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	EWeaponType CurrentWeapon = EWeaponType::Shotgun;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 ShotgunMaxAmmo = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 PistolMaxAmmo = 12;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 ShotgunLoadedAmmo = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 PistolLoadedAmmo = 0;
+
+	// 기존 MapAnimation은 샷건용으로 유지
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Animation")
+	TMap<EAniState, UAnimMontage*> PistolMapAnimation;
+
+	// 피스톨에 사용할 발사체 BP
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<APortfolio_Tile> PistolProjectileClass;
+
+	void EquipShotgun();
+	void EquipPistol();
+	void EquipWeapon(EWeaponType NewWeapon);
+
+	int32 GetMaxAmmo() const;
+	int32& GetLoadedAmmoRef();
+
+	FDataTableRowHandle GetCurrentAmmoRow() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -156,5 +201,11 @@ public:
 private:
 	//virtual void Tick(float DeltaTime) override;
 	void Tick(float _Delta) override;
+
+	// 발사 노티파이가 한 공격에서 중복 실행되는 것을 방지
+	bool bShotPending = false;
+
+	// 피스톨 장전 노티파이 중복 처리 방지
+	bool bPistolReloadApplied = false;
 };
 

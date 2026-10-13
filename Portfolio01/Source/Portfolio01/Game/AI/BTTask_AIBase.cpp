@@ -182,6 +182,7 @@ class AActor* UBTTask_AIBase::GetTargetSearch(UBehaviorTreeComponent& OwnerComp)
 
 bool UBTTask_AIBase::IsDeathCheck(UBehaviorTreeComponent& OwnerComp)
 {
+	int hp = GetGlobalCharacter(OwnerComp)->GetHP();
 	if (0 >= GetGlobalCharacter(OwnerComp)->GetHP())
 	{
 		SetStateChange(OwnerComp, AIState::DEATH);

@@ -13,6 +13,192 @@ UPortfolio_Widget_Inventory* UPortfolio_Widget_Inventory::InvenWidget = nullptr;
 
 // GameMode아니면 HUD가 알게하는게 가장 좋습니다.
 
+int32 UPortfolio_Widget_Inventory::GetAmmoCount() const
+{
+	//if (!IsValid(InvenList) ||
+	//	!AmmoItemRow.DataTable ||
+	//	AmmoItemRow.RowName.IsNone())
+	//{
+	//	return 0;
+	//}
+	//
+	//const FItemData* AmmoData =
+	//	AmmoItemRow.GetRow<FItemData>(TEXT("GetAmmoCount"));
+	//
+	//if (!AmmoData)
+	//{
+	//	return 0;
+	//}
+	//
+	//int32 Total = 0;
+	//
+	//for (UObject* Object : InvenList->GetListItems())
+	//{
+	//	const UInventoryItemData* Item =
+	//		Cast<UInventoryItemData>(Object);
+	//
+	//	if (IsValid(Item) && Item->Data == AmmoData)
+	//	{
+	//		Total += FMath::Max(0, Item->Count);
+	//	}
+	//}
+	//
+	//return Total;
+
+	return GetAmmoCountForRow(AmmoItemRow);
+}
+
+bool UPortfolio_Widget_Inventory::TryConsumeAmmo(int32 Amount)
+{
+	//if (Amount <= 0 || GetAmmoCount() < Amount)
+	//{
+	//	return false;
+	//}
+	//
+	//const FItemData* AmmoData =
+	//	AmmoItemRow.GetRow<FItemData>(TEXT("TryConsumeAmmo"));
+	//
+	//int32 Remaining = Amount;
+	//
+	//for (UObject* Object : InvenList->GetListItems())
+	//{
+	//	UInventoryItemData* Item =
+	//		Cast<UInventoryItemData>(Object);
+	//
+	//	if (!IsValid(Item) ||
+	//		Item->Data != AmmoData ||
+	//		Item->Count <= 0)
+	//	{
+	//		continue;
+	//	}
+	//
+	//	const int32 ConsumeCount =
+	//		FMath::Min(Item->Count, Remaining);
+	//
+	//	Item->Count -= ConsumeCount;
+	//	Remaining -= ConsumeCount;
+	//
+	//	if (Item->Count == 0)
+	//	{
+	//		// 슬롯은 유지하고 내용만 비움
+	//		Item->Data = nullptr;
+	//	}
+	//
+	//	if (Remaining == 0)
+	//	{
+	//		break;
+	//	}
+	//}
+	//
+	//CheckBulletNum = GetAmmoCount();
+	//
+	//// 현재 화면에 표시된 슬롯 갱신
+	//for (UUserWidget* Entry : InvenList->GetDisplayedEntryWidgets())
+	//{
+	//	auto* InventorySlotWidget =
+	//		Cast<UPortfolio_Widget_InventorySlot>(Entry);
+	//
+	//	if (IsValid(InventorySlotWidget))
+	//	{
+	//		InventorySlotWidget->SlotDataCheck();
+	//	}
+	//}
+	//
+	//return true;
+
+	return TryConsumeAmmoForRow(AmmoItemRow, Amount);
+}
+
+int32 UPortfolio_Widget_Inventory::GetAmmoCountForRow(const FDataTableRowHandle& AmmoRow) const
+{
+	if (!IsValid(InvenList) ||
+		!AmmoRow.DataTable ||
+		AmmoRow.RowName.IsNone())
+	{
+		return 0;
+	}
+
+	const FItemData* AmmoData =
+		AmmoRow.GetRow<FItemData>(TEXT("GetAmmoCountForRow"));
+
+	if (!AmmoData)
+	{
+		return 0;
+	}
+
+	int32 Total = 0;
+
+	for (UObject* Object : InvenList->GetListItems())
+	{
+		const UInventoryItemData* Item =
+			Cast<UInventoryItemData>(Object);
+
+		if (IsValid(Item) && Item->Data == AmmoData)
+		{
+			Total += FMath::Max(0, Item->Count);
+		}
+	}
+
+	return Total;
+}
+
+bool UPortfolio_Widget_Inventory::TryConsumeAmmoForRow(const FDataTableRowHandle& AmmoRow, int32 Amount)
+{
+	if (Amount <= 0 || GetAmmoCountForRow(AmmoRow) < Amount)
+	{
+		return false;
+	}
+
+	const FItemData* AmmoData =
+		AmmoRow.GetRow<FItemData>(TEXT("TryConsumeAmmoForRow"));
+
+	int32 Remaining = Amount;
+
+	for (UObject* Object : InvenList->GetListItems())
+	{
+		UInventoryItemData* Item =
+			Cast<UInventoryItemData>(Object);
+
+		if (!IsValid(Item) ||
+			Item->Data != AmmoData ||
+			Item->Count <= 0)
+		{
+			continue;
+		}
+
+		const int32 ConsumeCount =
+			FMath::Min(Item->Count, Remaining);
+
+		Item->Count -= ConsumeCount;
+		Remaining -= ConsumeCount;
+
+		if (Item->Count == 0)
+		{
+			Item->Data = nullptr;
+		}
+
+		if (Remaining == 0)
+		{
+			break;
+		}
+	}
+
+	CheckBulletNum = GetAmmoCount();
+
+	for (UUserWidget* Entry : InvenList->GetDisplayedEntryWidgets())
+	{
+		auto* InventorySlotWidget =
+			Cast<UPortfolio_Widget_InventorySlot>(Entry);
+
+		if (IsValid(InventorySlotWidget))
+		{
+			InventorySlotWidget->SlotDataCheck();
+		}
+	}
+
+	return true;
+}
+
 // 데이터와 랜더링은 분리되어야 한다.
 void UPortfolio_Widget_Inventory::NativeConstruct()
 {
@@ -23,11 +209,58 @@ void UPortfolio_Widget_Inventory::NativeConstruct()
 	InvenList = Cast<UTileView>(GetWidgetFromName(TEXT("InvenTileView")));
 
 
-	for (size_t i = 0; i < 4; i++)
+	//for (size_t i = 0; i < 4; i++)
+	//{
+	//	UInventoryItemData* ItemObject = NewObject<UInventoryItemData>();
+	//	ItemObject->Data = nullptr;
+	//	InvenList->AddItem(ItemObject);
+	//}
+
+	if (IsValid(InvenList) && InvenList->GetNumItems() == 0)
 	{
-		UInventoryItemData* ItemObject = NewObject<UInventoryItemData>();
-		ItemObject->Data = nullptr;
-		InvenList->AddItem(ItemObject);
+		// 빈 슬롯 4개 생성
+		for (int32 i = 0; i < 4; ++i)
+		{
+			UInventoryItemData* ItemObject =
+				NewObject<UInventoryItemData>(this);
+
+			ItemObject->Data = nullptr;
+			ItemObject->Count = 0;
+
+			InvenList->AddItem(ItemObject);
+		}
+
+		// 지정한 탄약 아이템 5개 지급
+		if (AmmoItemRow.DataTable && !AmmoItemRow.RowName.IsNone())
+		{
+			const FItemData* AmmoData =
+				AmmoItemRow.GetRow<FItemData>(TEXT("StartingAmmo"));
+
+			if (AmmoData)
+			{
+				for (int32 i = 0; i < 5; ++i)
+				{
+					AddGameItem(AmmoData);
+				}
+			}
+		}
+
+		if (PistolAmmoItemRow.DataTable &&
+			!PistolAmmoItemRow.RowName.IsNone())
+		{
+			const FItemData* PistolAmmoData =
+				PistolAmmoItemRow.GetRow<FItemData>(TEXT("StartingPistolAmmo"));
+
+			if (PistolAmmoData)
+			{
+				for (int32 i = 0; i < 12; ++i)
+				{
+					AddGameItem(PistolAmmoData);
+				}
+			}
+		}
+
+		CheckBulletNum = GetAmmoCount();
 	}
 
 	UPortfolio_GameInstance* GameInstance = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
@@ -47,14 +280,6 @@ void UPortfolio_Widget_Inventory::NativeTick(const FGeometry& MyGeometry, float 
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	// 앵커와 상관없이 변환되어서 들어온 포지션을 의미한다.
-	// 앵커의 개념은 정확하게 설명하자면 블루프린트에서만 유효하다.
-	// 화면에서의 좌표계를 기준으로 처리한것과.
-	// MyGeometry.GetAbsolutePosition();
-
-	// SetPositionInViewport(FVector2D{0, 0});
-
-	// 틱에 들어왔다는것은 인벤토리가 열리고 아이템이 다 만들어졌다는 이야기이다.
 	const TArray<UObject*>& Items = InvenList->GetListItems();
 	for (size_t i = 0; i < Items.Num(); i++)
 	{
@@ -70,17 +295,15 @@ void UPortfolio_Widget_Inventory::NativeTick(const FGeometry& MyGeometry, float 
 		SlotWidget->SlotDataCheck();
 	}
 
-	CheckBulletNum = InvenList->GetNumItems(); 
-	CheckBulletNum += 1;
+	//CheckBulletNum = InvenList->GetNumItems(); 
+	//CheckBulletNum += 1;
+	//
+	//for (size_t i = 0; i < 2; i++)
+	//{
+	//	CheckBulletNum = InvenList->GetNumItems();
+	//}
 
-	for (size_t i = 0; i < 2; i++)
-	{
-		CheckBulletNum = InvenList->GetNumItems();
-	}
-	
-	
-	
-
+	CheckBulletNum = GetAmmoCount();
 }
 
 void UPortfolio_Widget_Inventory::AddInvenItem(UObject* _Data, UUserWidget* _Widget)
@@ -100,37 +323,56 @@ void UPortfolio_Widget_Inventory::AddInvenItem(UObject* _Data, UUserWidget* _Wid
 	int a = 0;
 }
 
-void UPortfolio_Widget_Inventory::AddGameItem(const FItemData* Data)
+bool UPortfolio_Widget_Inventory::AddGameItem(const FItemData* Data)
 {
-	// 전체 아이템
-	const TArray<UObject*>& Items = InvenList->GetListItems();
-
-	// 중복가능한 아이템들을 한번다 살펴보고
-
-	for (size_t i = 0; i < Items.Num(); i++)
+	if (!Data || !IsValid(InvenList))
 	{
-		UInventoryItemData* DataObject = Cast<UInventoryItemData>(Items[i]);
-		
-		if (nullptr == DataObject->Data)
+		return false;
+	}
+
+	const TArray<UObject*>& Items = InvenList->GetListItems();
+	const int32 StackLimit = FMath::Max(1, Data->StackMax);
+
+	// 같은 아이템이 있는 슬롯부터 채움
+	for (UObject* Object : Items)
+	{
+		UInventoryItemData* Item =
+			Cast<UInventoryItemData>(Object);
+
+		if (!IsValid(Item))
 		{
-			// 데이터까지만 세팅해 놓습니다.
-			// 비어있는 인벤이다.
-			DataObject->Data = Data;
-			return;
+			continue;
 		}
 
-		if (DataObject->Data == Data
-			&& DataObject->Count < Data->StackMax)
+		if (Item->Data == Data && Item->Count < StackLimit)
 		{
-			++DataObject->Count;
+			++Item->Count;
 			++MyVariable;
-			//int Bullet = CurPlayerData->
-			return;
+			return true;
 		}
 	}
 
+	// 합칠 수 없다면 빈 슬롯 사용
+	for (UObject* Object : Items)
+	{
+		UInventoryItemData* Item =
+			Cast<UInventoryItemData>(Object);
 
-	return;
+		if (!IsValid(Item))
+		{
+			continue;
+		}
+
+		if (Item->Data == nullptr)
+		{
+			Item->Data = Data;
+			Item->Count = 1;
+			return true;
+		}
+	}
+
+	// 들어갈 공간이 없음
+	return false;
 }
 
 

@@ -29,9 +29,19 @@ public:
 	//struct APortfolio_Tile* CurData;
 	struct FTileData* CurData;
 
+	void SetSpeed(int _Speed)
+	{
+		Speed = _Speed;
+	}
+
+	float GetSpeed()
+	{
+		return Speed;
+	}
+
 	void SetHP(int _HP)
 	{
-		HP -= _HP;
+		HP = _HP;
 	}
 
 	void AddHP(int _HP)
@@ -44,10 +54,35 @@ public:
 		return HP;
 	}
 
+	void SetStunHP(int _StunHP)
+	{
+		StunHP = _StunHP;
+	}
+
+	int GetStunHP()
+	{
+		return StunHP;
+	}
+
+	void SetATT(int _Att)
+	{
+		Att = _Att;
+	}
+
 	int GetATT()
 	{
 		return Att;
-		Att = 0;
+		//Att = 0;
+	}
+
+	void SetStunATT(int _StunAtt)
+	{
+		StunAtt = _StunAtt;
+	}
+
+	int GetStunATT()
+	{
+		return StunAtt;
 	}
 
 	int GetAniState()
@@ -216,16 +251,26 @@ private:
 	class UPortfolio_GlobalAnimInstance* Portfolio_GlobalAnimInstance = nullptr;
 
 	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	    float Speed = 200.0f;
+
+	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int HP = 1500;
 
 	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int PlayerHP = 1000;
 
 	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int StunHP = 1000;
+
+	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName BoneName;
 
 	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool BoneCheck = false;
+
 	UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int Att = 0;
+
+    UPROPERTY(Category = "GlobalChracterValue", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int StunAtt = 0;
 };

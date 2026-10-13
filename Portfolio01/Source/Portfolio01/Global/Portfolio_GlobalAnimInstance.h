@@ -40,6 +40,15 @@ public:
 
 	// 애님인스턴용 Tick과 BeginPlay
 
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float MoveSpeed = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float MoveDirection = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	bool bUseUpperBody = false;
+
 protected:
 	void NativeBeginPlay() override;
 	void NativeUpdateAnimation(float _DeltaTime) override;

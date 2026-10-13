@@ -6,6 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include <UI/Portfolio_Widget_Inventory.h>
 #include <UI/Portfolio_HUD.h>
+#include "Sound/SoundBase.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/DataTable.h"
 
 // Sets default values
 APortfolio_Item::APortfolio_Item()
@@ -18,22 +21,24 @@ APortfolio_Item::APortfolio_Item()
 // Called when the game starts or when spawned
 void APortfolio_Item::BeginPlay()
 {
+	// 반드시 한 번만 호출
 	Super::BeginPlay();
-	// 
-	UPortfolio_GameInstance* GameInstance = GetWorld()->GetGameInstance<UPortfolio_GameInstance>();
-	Data = GameInstance->GetRandomItemData();
 
+	Data = nullptr;
 
-	if (nullptr != Data->Mesh)
+	if (!ItemRow.DataTable || ItemRow.RowName.IsNone())
 	{
-		// 내부에 static매쉬 컴포넌트가 있는지 찾고
-		UActorComponent* Component = GetComponentByClass(UStaticMeshComponent::StaticClass());
-		UStaticMeshComponent* StaticMesh = Cast<UStaticMeshComponent>(Component);
-		if (nullptr != StaticMesh)
-		{
-			StaticMesh->SetStaticMesh(Data->Mesh);
-		}
+		UE_LOG(
+			LogTemp, Warning,
+			TEXT("%s: ItemRow is not assigned."),
+			*GetName()
+		);
+		return;
 	}
+
+	Data = ItemRow.GetRow<FItemData>(
+		TEXT("Item BeginPlay")
+	);
 }
 
 // Called every frame
@@ -45,23 +50,10 @@ void APortfolio_Item::Tick(float DeltaTime)
 
 void APortfolio_Item::Take(AActor* _Actor)
 {
-	// 이 아이템을 먹는게 무조건 절대로 이 세상이 쪼개져도 플레이어라는게 확실하면.
-	// 아이템
-	// UInventoryUserWidget* WidGet;
-	// dlrjf 
-
-	// static의 장점
-	// 메모리 크러쉬를 낼수 있다.
-
-	// 가장 좋은 건 GameMode입니다.
-	// 
-	// UInventoryUserWidget::InvenWidget;
-
-	// 절대로 안나온다고 확답을 받아야 한다.
-	// 무조건 먹었으면 플레이어라고 생각한다.
-	// 이게 무조건 또 플레이어가 아닐수 있다는 가정하에.
-
-	// 인벤토리를 가져와서 인벤토리에 넣어버린다.
+	if (!Data)
+	{
+		return;
+	}
 
 	APlayerController* Con = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	APortfolio_HUD* HUD = Con->GetHUD<APortfolio_HUD>();
@@ -85,7 +77,26 @@ void APortfolio_Item::Take(AActor* _Actor)
 		return;
 	}
 
-	Inventory->AddGameItem(Data);
+	int32 AddedCount = 0;
+
+	for (int32 i = 0; i < PickupAmount; ++i)
+	{
+		if (!Inventory->AddGameItem(Data))
+		{
+			break;
+		}
+
+		++AddedCount;
+	}
+
+	// 실제로 하나 이상 획득했을 때만 한 번 재생
+	if (AddedCount > 0 && IsValid(Data->PickupSound))
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			Data->PickupSound
+		);
+	}
 
 	// Inventory->AddInvenItem()
 

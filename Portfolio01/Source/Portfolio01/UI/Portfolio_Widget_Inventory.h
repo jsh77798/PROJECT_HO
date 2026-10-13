@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TileView.h"
+#include "Engine/DataTable.h"
 #include "Portfolio_Widget_Inventory.generated.h"
 
 /**
@@ -32,9 +33,27 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 		int32 CheckBulletNum = 0;
 
-	void AddGameItem(const struct FItemData* Data);
+	bool AddGameItem(const struct FItemData* Data);
 
 	struct FPlayerData* CurPlayerData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo")
+	FDataTableRowHandle AmmoItemRow;
+
+	UFUNCTION(BlueprintPure, Category = "Ammo")
+	int32 GetAmmoCount() const;
+
+	bool TryConsumeAmmo(int32 Amount);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo")
+	FDataTableRowHandle PistolAmmoItemRow;
+
+	int32 GetAmmoCountForRow(const FDataTableRowHandle& AmmoRow) const;
+
+	bool TryConsumeAmmoForRow(
+		const FDataTableRowHandle& AmmoRow,
+		int32 Amount
+	);
 
 protected:
 	void NativeConstruct() override;
